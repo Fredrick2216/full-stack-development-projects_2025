@@ -143,7 +143,12 @@ const ExpensesPage: React.FC = () => {
                 <ExpenseForm
                   onSubmit={handleUpdateExpense}
                   onCancel={() => setIsEditDialogOpen(false)}
-                  initialValues={currentExpense}
+                  initialValues={{
+                    ...currentExpense,
+                    date: typeof currentExpense.date === 'string' 
+                      ? new Date(currentExpense.date) 
+                      : currentExpense.date
+                  }}
                   isEditing={true}
                 />
               )}

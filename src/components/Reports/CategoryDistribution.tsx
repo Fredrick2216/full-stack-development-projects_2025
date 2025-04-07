@@ -75,7 +75,7 @@ const CategoryDistribution: React.FC<CategoryDistributionProps> = ({ expenses })
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value) => [`$${value.toFixed(2)}`, ""]}
+                formatter={(value) => [`$${typeof value === 'number' ? value.toFixed(2) : value}`, ""]}
                 contentStyle={{
                   backgroundColor: "rgba(22, 25, 31, 0.9)",
                   borderRadius: "0.5rem",
