@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
@@ -10,6 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Database } from "@/integrations/supabase/types";
+
+interface CategorySummary {
+  category: string;
+  count: number;
+  total: number;
+}
 
 const ReportsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -138,7 +145,7 @@ const ReportsPage: React.FC = () => {
   const avgDailyExpense = expenses.length ? totalExpenses / 30 : 0; // Assuming one month
   
   const categories = [...new Set(expenses.map(exp => exp.category))];
-  const categoryCounts = categories.map(category => {
+  const categoryCounts: CategorySummary[] = categories.map(category => {
     const categoryExpenses = expenses.filter(exp => exp.category === category);
     return {
       category,
@@ -153,7 +160,7 @@ const ReportsPage: React.FC = () => {
     
   const mostFrequentCategory = categoryCounts.length > 0
     ? categoryCounts.sort((a, b) => b.count - a.count)[0]
-    : { category: 'None', count: 0 };
+    : { category: 'None', count: 0, total: 0 };
   
   // Get the current month name for display
   const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
