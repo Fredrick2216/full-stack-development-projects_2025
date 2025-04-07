@@ -146,7 +146,7 @@ const ExpensesPage: React.FC = () => {
       const { error } = await supabase
         .from('expenses')
         .update(expenseToUpdate)
-        .eq("id", currentExpense.id.toString()) // Convert id to string
+        .eq("id", String(currentExpense.id)) // Convert id to string
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -173,7 +173,7 @@ const ExpensesPage: React.FC = () => {
         const { error } = await supabase
           .from('expenses')
           .delete()
-          .eq("id", id.toString()) // Convert id to string
+          .eq("id", String(id)) // Convert id to string
           .eq("user_id", user.id);
 
         if (error) throw error;

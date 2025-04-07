@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
@@ -26,7 +25,6 @@ const ReportsPage: React.FC = () => {
   const [monthlyChange, setMonthlyChange] = useState<{[key: string]: number}>({});
   const navigate = useNavigate();
   
-  // Check if user is authenticated
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getSession();
@@ -45,12 +43,10 @@ const ReportsPage: React.FC = () => {
     checkUser();
   }, [navigate]);
 
-  // Fetch expenses data for reports
   const fetchExpensesData = async (userId: string) => {
     try {
       setLoading(true);
       
-      // Get expenses for the past 3 months for more comprehensive reports
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       
@@ -62,7 +58,6 @@ const ReportsPage: React.FC = () => {
         
       if (error) throw error;
       
-      // Transform expenses to match our application's format
       const formattedExpenses = data ? data.map(expense => ({
         id: expense.id,
         title: expense.title,
@@ -74,7 +69,6 @@ const ReportsPage: React.FC = () => {
       
       setExpenses(formattedExpenses);
       
-      // Calculate month-over-month changes
       calculateMonthlyChanges(data || []);
       
     } catch (error: any) {
@@ -85,7 +79,6 @@ const ReportsPage: React.FC = () => {
     }
   };
 
-  // Calculate month-over-month changes
   const calculateMonthlyChanges = (data: any[]) => {
     const today = new Date();
     const currentMonth = today.getMonth();
@@ -96,7 +89,6 @@ const ReportsPage: React.FC = () => {
     const yearOfPreviousMonth = currentMonth === 0 ? currentYear - 1 : currentYear;
     const yearOfMonthBeforeThat = previousMonth === 0 ? yearOfPreviousMonth - 1 : yearOfPreviousMonth;
     
-    // Group expenses by month
     const currentMonthExpenses = data.filter(expense => {
       const expenseDate = new Date(expense.date);
       return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
@@ -112,7 +104,6 @@ const ReportsPage: React.FC = () => {
       return expenseDate.getMonth() === monthBeforeThat && expenseDate.getFullYear() === yearOfMonthBeforeThat;
     });
     
-    // Calculate totals
     const currentMonthTotal = currentMonthExpenses.reduce(
       (sum, expense) => sum + parseFloat(expense.amount as unknown as string), 0
     );
@@ -125,7 +116,6 @@ const ReportsPage: React.FC = () => {
       (sum, expense) => sum + parseFloat(expense.amount as unknown as string), 0
     );
     
-    // Calculate percentage changes
     const currentToPreviousChange = previousMonthTotal === 0 
       ? 0 
       : ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100;
@@ -140,9 +130,8 @@ const ReportsPage: React.FC = () => {
     });
   };
 
-  // Calculate insights
   const totalExpenses = expenses.reduce((total, exp) => total + exp.amount, 0);
-  const avgDailyExpense = expenses.length ? totalExpenses / 30 : 0; // Assuming one month
+  const avgDailyExpense = expenses.length ? totalExpenses / 30 : 0;
   
   const categories = [...new Set(expenses.map(exp => exp.category))];
   const categoryCounts: CategorySummary[] = categories.map(category => {
@@ -156,16 +145,15 @@ const ReportsPage: React.FC = () => {
   
   const topCategory = categoryCounts.length > 0 
     ? categoryCounts.sort((a, b) => b.total - a.total)[0] 
-    : { category: 'None', total: 0 };
+    : { category: 'None', total: 0, count: 0 };
     
   const mostFrequentCategory = categoryCounts.length > 0
     ? categoryCounts.sort((a, b) => b.count - a.count)[0]
     : { category: 'None', count: 0, total: 0 };
   
-  // Get the current month name for display
   const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
   const previousMonthName = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLocaleString('default', { month: 'long' });
-  
+
   return (
     <div className="min-h-screen w-full space-bg animate-space flex">
       <StarField />
