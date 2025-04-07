@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,24 +9,162 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const SettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState("account");
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("account");
+  const [user, setUser] = useState<any>(null);
+  
+  // Profile state
+  const [firstName, setFirstName] = useState("John");
+  const [lastName, setLastName] = useState("Doe");
+  const [email, setEmail] = useState("");
+  const [currency, setCurrency] = useState("USD");
+  
+  // Notification state
+  const [budgetAlerts, setBudgetAlerts] = useState(true);
+  const [expenseReminders, setExpenseReminders] = useState(true);
+  const [financialTips, setFinancialTips] = useState(false);
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  
+  // Security state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [twoFactor, setTwoFactor] = useState(false);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  // Fetch user on mount
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        setEmail(session.user.email || "");
+      } else {
+        navigate('/auth');
+      }
+    };
+    
+    getUser();
+  }, [navigate]);
+
+  // Handle profile update
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Profile updated successfully!");
+    try {
+      // Store user preferences in database or localStorage
+      localStorage.setItem('userPreferences', JSON.stringify({
+        firstName,
+        lastName,
+        currency
+      }));
+      
+      toast.success("Profile updated successfully!");
+    } catch (error: any) {
+      toast.error(`Failed to update profile: ${error.message}`);
+    }
   };
 
-  const handleSaveNotifications = (e: React.FormEvent) => {
+  // Handle notification preferences update
+  const handleSaveNotifications = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Notification preferences updated!");
+    try {
+      // Store notification preferences in database or localStorage
+      localStorage.setItem('notificationPreferences', JSON.stringify({
+        budgetAlerts,
+        expenseReminders,
+        financialTips,
+        emailNotifications
+      }));
+      
+      toast.success("Notification preferences updated!");
+    } catch (error: any) {
+      toast.error(`Failed to update notification preferences: ${error.message}`);
+    }
   };
 
-  const handleSaveSecurity = (e: React.FormEvent) => {
+  // Handle password update
+  const handleSaveSecurity = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Password updated successfully!");
+    
+    if (!currentPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords don't match");
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
+      });
+      
+      if (error) throw error;
+      
+      // Also update two-factor preference if needed
+      localStorage.setItem('securityPreferences', JSON.stringify({
+        twoFactor
+      }));
+      
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      
+      toast.success("Password updated successfully!");
+    } catch (error: any) {
+      toast.error(`Failed to update password: ${error.message}`);
+    }
   };
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/auth');
+      toast.success("Logged out successfully");
+    } catch (error: any) {
+      toast.error(`Failed to log out: ${error.message}`);
+    }
+  };
+
+  // Load preferences from localStorage on component mount
+  useEffect(() => {
+    // Load user preferences
+    const savedUserPrefs = localStorage.getItem('userPreferences');
+    if (savedUserPrefs) {
+      const prefs = JSON.parse(savedUserPrefs);
+      setFirstName(prefs.firstName || firstName);
+      setLastName(prefs.lastName || lastName);
+      setCurrency(prefs.currency || currency);
+    }
+    
+    // Load notification preferences
+    const savedNotificationPrefs = localStorage.getItem('notificationPreferences');
+    if (savedNotificationPrefs) {
+      const prefs = JSON.parse(savedNotificationPrefs);
+      setBudgetAlerts(prefs.budgetAlerts);
+      setExpenseReminders(prefs.expenseReminders);
+      setFinancialTips(prefs.financialTips);
+      setEmailNotifications(prefs.emailNotifications);
+    }
+    
+    // Load security preferences
+    const savedSecurityPrefs = localStorage.getItem('securityPreferences');
+    if (savedSecurityPrefs) {
+      const prefs = JSON.parse(savedSecurityPrefs);
+      setTwoFactor(prefs.twoFactor);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen w-full space-bg animate-space flex">
@@ -58,22 +196,40 @@ const SettingsPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">First Name</Label>
-                        <Input id="firstName" defaultValue="John" className="bg-secondary/60" />
+                        <Input 
+                          id="firstName" 
+                          value={firstName} 
+                          onChange={(e) => setFirstName(e.target.value)} 
+                          className="bg-secondary/60" 
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lastName">Last Name</Label>
-                        <Input id="lastName" defaultValue="Doe" className="bg-secondary/60" />
+                        <Input 
+                          id="lastName" 
+                          value={lastName} 
+                          onChange={(e) => setLastName(e.target.value)} 
+                          className="bg-secondary/60" 
+                        />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" defaultValue="john.doe@example.com" className="bg-secondary/60" />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="bg-secondary/60" 
+                        disabled={true}  // Email can't be changed directly
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="currency">Preferred Currency</Label>
                       <select 
                         id="currency" 
-                        defaultValue="USD" 
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value)}
                         className="w-full rounded-md bg-secondary/60 border border-input p-2"
                       >
                         <option value="USD">US Dollar ($)</option>
@@ -107,7 +263,11 @@ const SettingsPage: React.FC = () => {
                           <Label htmlFor="budget-alerts">Budget Alerts</Label>
                           <p className="text-sm text-muted-foreground">Receive notifications when you're approaching your budget limits</p>
                         </div>
-                        <Switch id="budget-alerts" defaultChecked />
+                        <Switch 
+                          id="budget-alerts" 
+                          checked={budgetAlerts} 
+                          onCheckedChange={setBudgetAlerts} 
+                        />
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -115,7 +275,11 @@ const SettingsPage: React.FC = () => {
                           <Label htmlFor="expense-reminders">Expense Reminders</Label>
                           <p className="text-sm text-muted-foreground">Get reminders about recurring expenses before they're due</p>
                         </div>
-                        <Switch id="expense-reminders" defaultChecked />
+                        <Switch 
+                          id="expense-reminders" 
+                          checked={expenseReminders} 
+                          onCheckedChange={setExpenseReminders} 
+                        />
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -123,7 +287,11 @@ const SettingsPage: React.FC = () => {
                           <Label htmlFor="tips">Financial Tips</Label>
                           <p className="text-sm text-muted-foreground">Receive occasional tips about financial management</p>
                         </div>
-                        <Switch id="tips" />
+                        <Switch 
+                          id="tips" 
+                          checked={financialTips} 
+                          onCheckedChange={setFinancialTips} 
+                        />
                       </div>
                       
                       <div className="flex items-center justify-between">
@@ -131,7 +299,11 @@ const SettingsPage: React.FC = () => {
                           <Label htmlFor="email-notifications">Email Notifications</Label>
                           <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                         </div>
-                        <Switch id="email-notifications" defaultChecked />
+                        <Switch 
+                          id="email-notifications" 
+                          checked={emailNotifications} 
+                          onCheckedChange={setEmailNotifications} 
+                        />
                       </div>
                     </div>
                     
@@ -156,27 +328,59 @@ const SettingsPage: React.FC = () => {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="current-password">Current Password</Label>
-                        <Input id="current-password" type="password" className="bg-secondary/60" />
+                        <Input 
+                          id="current-password" 
+                          type="password" 
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          className="bg-secondary/60" 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="new-password">New Password</Label>
-                        <Input id="new-password" type="password" className="bg-secondary/60" />
+                        <Input 
+                          id="new-password" 
+                          type="password" 
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          className="bg-secondary/60" 
+                        />
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">Confirm New Password</Label>
-                        <Input id="confirm-password" type="password" className="bg-secondary/60" />
+                        <Input 
+                          id="confirm-password" 
+                          type="password" 
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          className="bg-secondary/60" 
+                        />
                       </div>
                       
                       <div className="flex items-center space-x-2 pt-2">
-                        <Switch id="two-factor" />
+                        <Switch 
+                          id="two-factor" 
+                          checked={twoFactor}
+                          onCheckedChange={setTwoFactor}
+                        />
                         <Label htmlFor="two-factor">Enable Two-Factor Authentication</Label>
                       </div>
                     </div>
                     
-                    <div className="flex justify-end">
-                      <Button type="submit" className="bg-space-purple hover:bg-space-purple/90">
+                    <div className="flex justify-between">
+                      <Button 
+                        type="button" 
+                        variant="destructive" 
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        className="bg-space-purple hover:bg-space-purple/90"
+                      >
                         Update Password
                       </Button>
                     </div>
