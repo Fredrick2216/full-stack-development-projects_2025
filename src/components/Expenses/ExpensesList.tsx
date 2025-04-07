@@ -6,7 +6,7 @@ import { Edit, Trash2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export interface Expense {
-  id: number;
+  id: string | number;  // Updated type to handle UUID from Supabase
   title: string;
   amount: number;
   category: string;
@@ -17,7 +17,7 @@ export interface Expense {
 interface ExpensesListProps {
   expenses: Expense[];
   onEdit: (expense: Expense) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string | number) => void;  // Updated type to handle UUID from Supabase
 }
 
 const ExpensesList: React.FC<ExpensesListProps> = ({

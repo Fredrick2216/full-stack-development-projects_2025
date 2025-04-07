@@ -1,74 +1,118 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
 import ExpenseForm from "@/components/Expenses/ExpenseForm";
 import ExpensesList, { Expense } from "@/components/Expenses/ExpensesList";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
-
-// Mock initial expenses data
-const initialExpenses: Expense[] = [
-  {
-    id: 1,
-    title: "Grocery Shopping",
-    amount: 85.75,
-    category: "Groceries",
-    date: new Date("2023-06-15"),
-    note: "Weekly groceries from Trader Joe's",
-  },
-  {
-    id: 2,
-    title: "Coffee",
-    amount: 4.50,
-    category: "Coffee",
-    date: new Date("2023-06-14"),
-  },
-  {
-    id: 3,
-    title: "Netflix Subscription",
-    amount: 15.99,
-    category: "Entertainment",
-    date: new Date("2023-06-12"),
-    note: "Monthly subscription",
-  },
-  {
-    id: 4,
-    title: "Gasoline",
-    amount: 45.25,
-    category: "Transportation",
-    date: new Date("2023-06-10"),
-  },
-  {
-    id: 5,
-    title: "Dinner with Friends",
-    amount: 65.30,
-    category: "Food",
-    date: new Date("2023-06-08"),
-    note: "Italian restaurant",
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const ExpensesPage: React.FC = () => {
-  const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentExpense, setCurrentExpense] = useState<Expense | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
 
-  const handleAddExpense = (newExpense: {
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user;
+      
+      if (!user) {
+        toast.error("Please login to view your expenses");
+        navigate("/auth");
+        return;
+      }
+      
+      setUser(user);
+      fetchExpenses(user.id);
+    };
+    
+    checkUser();
+  }, [navigate]);
+
+  // Fetch expenses from Supabase
+  const fetchExpenses = async (userId: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("expenses")
+        .select("*")
+        .eq("user_id", userId)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform expenses to match our application's format
+      const formattedExpenses = data.map(expense => ({
+        id: expense.id,
+        title: expense.title,
+        amount: parseFloat(expense.amount),
+        category: expense.category,
+        date: new Date(expense.date),
+        note: expense.note || undefined
+      }));
+
+      setExpenses(formattedExpenses);
+    } catch (error: any) {
+      toast.error(`Failed to fetch expenses: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddExpense = async (newExpense: {
     title: string;
     amount: number;
     category: string;
     date: Date;
     note?: string;
   }) => {
-    const expenseToAdd: Expense = {
-      id: Date.now(),
-      ...newExpense,
-    };
-    
-    setExpenses((prev) => [expenseToAdd, ...prev]);
-    setIsAddDialogOpen(false);
+    try {
+      if (!user) {
+        toast.error("Please login to add expenses");
+        return;
+      }
+
+      const expenseToAdd = {
+        user_id: user.id,
+        title: newExpense.title,
+        amount: newExpense.amount,
+        category: newExpense.category,
+        date: newExpense.date.toISOString(),
+        note: newExpense.note || null
+      };
+
+      const { data, error } = await supabase
+        .from("expenses")
+        .insert(expenseToAdd)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const addedExpense: Expense = {
+        id: data.id,
+        title: data.title,
+        amount: parseFloat(data.amount),
+        category: data.category,
+        date: new Date(data.date),
+        note: data.note || undefined
+      };
+      
+      setExpenses((prev) => [addedExpense, ...prev]);
+      setIsAddDialogOpen(false);
+      toast.success("Expense added successfully!");
+    } catch (error: any) {
+      toast.error(`Failed to add expense: ${error.message}`);
+    }
   };
 
   const handleEditExpense = (expense: Expense) => {
@@ -76,29 +120,64 @@ const ExpensesPage: React.FC = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleUpdateExpense = (updatedExpense: {
+  const handleUpdateExpense = async (updatedExpense: {
     title: string;
     amount: number;
     category: string;
     date: Date;
     note?: string;
   }) => {
-    if (!currentExpense) return;
+    if (!currentExpense || !user) return;
     
-    setExpenses((prev) =>
-      prev.map((exp) =>
-        exp.id === currentExpense.id ? { ...updatedExpense, id: exp.id } : exp
-      )
-    );
-    
-    setIsEditDialogOpen(false);
-    setCurrentExpense(null);
+    try {
+      const expenseToUpdate = {
+        title: updatedExpense.title,
+        amount: updatedExpense.amount,
+        category: updatedExpense.category,
+        date: updatedExpense.date.toISOString(),
+        note: updatedExpense.note || null
+      };
+
+      const { error } = await supabase
+        .from("expenses")
+        .update(expenseToUpdate)
+        .eq("id", currentExpense.id)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      
+      setExpenses((prev) =>
+        prev.map((exp) =>
+          exp.id === currentExpense.id ? { ...updatedExpense, id: exp.id } : exp
+        )
+      );
+      
+      setIsEditDialogOpen(false);
+      setCurrentExpense(null);
+      toast.success("Expense updated successfully!");
+    } catch (error: any) {
+      toast.error(`Failed to update expense: ${error.message}`);
+    }
   };
 
-  const handleDeleteExpense = (id: number) => {
+  const handleDeleteExpense = async (id: string | number) => {
+    if (!user) return;
+    
     if (confirm("Are you sure you want to delete this expense?")) {
-      setExpenses((prev) => prev.filter((exp) => exp.id !== id));
-      toast.success("Expense deleted successfully");
+      try {
+        const { error } = await supabase
+          .from("expenses")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+        
+        setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+        toast.success("Expense deleted successfully");
+      } catch (error: any) {
+        toast.error(`Failed to delete expense: ${error.message}`);
+      }
     }
   };
 
@@ -122,11 +201,18 @@ const ExpensesPage: React.FC = () => {
             </button>
           </div>
           
-          <ExpensesList
-            expenses={expenses}
-            onEdit={handleEditExpense}
-            onDelete={handleDeleteExpense}
-          />
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-space-purple" />
+              <span className="ml-2 text-lg">Loading your expenses...</span>
+            </div>
+          ) : (
+            <ExpensesList
+              expenses={expenses}
+              onEdit={handleEditExpense}
+              onDelete={handleDeleteExpense}
+            />
+          )}
 
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogContent className="max-w-md">
