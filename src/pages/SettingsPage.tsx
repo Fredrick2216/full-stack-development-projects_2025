@@ -11,15 +11,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+
+interface UserPreferences {
+  firstName: string;
+  lastName: string;
+  currency: string;
+}
+
+interface NotificationPreferences {
+  budgetAlerts: boolean;
+  expenseReminders: boolean;
+  financialTips: boolean;
+  emailNotifications: boolean;
+}
+
+interface SecurityPreferences {
+  twoFactor: boolean;
+}
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("account");
   const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
   
   // Profile state
-  const [firstName, setFirstName] = useState("John");
-  const [lastName, setLastName] = useState("Doe");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [currency, setCurrency] = useState("USD");
   
@@ -38,120 +57,41 @@ const SettingsPage: React.FC = () => {
   // Fetch user on mount
   useEffect(() => {
     const getUser = async () => {
+      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (session?.user) {
         setUser(session.user);
         setEmail(session.user.email || "");
+        
+        // Fetch user preferences from localStorage
+        loadUserPreferences();
       } else {
+        toast.error("Please login to access settings");
         navigate('/auth');
       }
+      
+      setLoading(false);
     };
     
     getUser();
   }, [navigate]);
 
-  // Handle profile update
-  const handleSaveProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      // Store user preferences in database or localStorage
-      localStorage.setItem('userPreferences', JSON.stringify({
-        firstName,
-        lastName,
-        currency
-      }));
-      
-      toast.success("Profile updated successfully!");
-    } catch (error: any) {
-      toast.error(`Failed to update profile: ${error.message}`);
-    }
-  };
-
-  // Handle notification preferences update
-  const handleSaveNotifications = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      // Store notification preferences in database or localStorage
-      localStorage.setItem('notificationPreferences', JSON.stringify({
-        budgetAlerts,
-        expenseReminders,
-        financialTips,
-        emailNotifications
-      }));
-      
-      toast.success("Notification preferences updated!");
-    } catch (error: any) {
-      toast.error(`Failed to update notification preferences: ${error.message}`);
-    }
-  };
-
-  // Handle password update
-  const handleSaveSecurity = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!currentPassword) {
-      toast.error("Please enter your current password");
-      return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords don't match");
-      return;
-    }
-    
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters long");
-      return;
-    }
-    
-    try {
-      const { error } = await supabase.auth.updateUser({ 
-        password: newPassword 
-      });
-      
-      if (error) throw error;
-      
-      // Also update two-factor preference if needed
-      localStorage.setItem('securityPreferences', JSON.stringify({
-        twoFactor
-      }));
-      
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      
-      toast.success("Password updated successfully!");
-    } catch (error: any) {
-      toast.error(`Failed to update password: ${error.message}`);
-    }
-  };
-  
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/auth');
-      toast.success("Logged out successfully");
-    } catch (error: any) {
-      toast.error(`Failed to log out: ${error.message}`);
-    }
-  };
-
-  // Load preferences from localStorage on component mount
-  useEffect(() => {
+  // Load preferences from localStorage
+  const loadUserPreferences = () => {
     // Load user preferences
     const savedUserPrefs = localStorage.getItem('userPreferences');
     if (savedUserPrefs) {
-      const prefs = JSON.parse(savedUserPrefs);
-      setFirstName(prefs.firstName || firstName);
-      setLastName(prefs.lastName || lastName);
-      setCurrency(prefs.currency || currency);
+      const prefs: UserPreferences = JSON.parse(savedUserPrefs);
+      setFirstName(prefs.firstName || "");
+      setLastName(prefs.lastName || "");
+      setCurrency(prefs.currency || "USD");
     }
     
     // Load notification preferences
     const savedNotificationPrefs = localStorage.getItem('notificationPreferences');
     if (savedNotificationPrefs) {
-      const prefs = JSON.parse(savedNotificationPrefs);
+      const prefs: NotificationPreferences = JSON.parse(savedNotificationPrefs);
       setBudgetAlerts(prefs.budgetAlerts);
       setExpenseReminders(prefs.expenseReminders);
       setFinancialTips(prefs.financialTips);
@@ -161,10 +101,149 @@ const SettingsPage: React.FC = () => {
     // Load security preferences
     const savedSecurityPrefs = localStorage.getItem('securityPreferences');
     if (savedSecurityPrefs) {
-      const prefs = JSON.parse(savedSecurityPrefs);
+      const prefs: SecurityPreferences = JSON.parse(savedSecurityPrefs);
       setTwoFactor(prefs.twoFactor);
     }
-  }, []);
+  };
+
+  // Handle profile update
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      // Store user preferences in localStorage
+      const userPreferences: UserPreferences = {
+        firstName,
+        lastName,
+        currency
+      };
+      
+      localStorage.setItem('userPreferences', JSON.stringify(userPreferences));
+      
+      // Update user metadata in Supabase (optional)
+      const { error } = await supabase.auth.updateUser({
+        data: { firstName, lastName, preferredCurrency: currency }
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Profile updated successfully!");
+    } catch (error: any) {
+      toast.error(`Failed to update profile: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle notification preferences update
+  const handleSaveNotifications = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      // Store notification preferences in localStorage
+      const notificationPreferences: NotificationPreferences = {
+        budgetAlerts,
+        expenseReminders,
+        financialTips,
+        emailNotifications
+      };
+      
+      localStorage.setItem('notificationPreferences', JSON.stringify(notificationPreferences));
+      
+      toast.success("Notification preferences updated!");
+    } catch (error: any) {
+      toast.error(`Failed to update notification preferences: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle password update
+  const handleSaveSecurity = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    if (!currentPassword) {
+      toast.error("Please enter your current password");
+      setLoading(false);
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords don't match");
+      setLoading(false);
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      // First verify current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      });
+      
+      if (signInError) {
+        throw new Error("Current password is incorrect");
+      }
+      
+      // If verification passed, update the password
+      const { error } = await supabase.auth.updateUser({ 
+        password: newPassword 
+      });
+      
+      if (error) throw error;
+      
+      // Also update two-factor preference if needed
+      const securityPreferences: SecurityPreferences = {
+        twoFactor
+      };
+      
+      localStorage.setItem('securityPreferences', JSON.stringify(securityPreferences));
+      
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      
+      toast.success("Password updated successfully!");
+    } catch (error: any) {
+      toast.error(`Failed to update password: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Handle logout
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      navigate('/auth');
+    } catch (error: any) {
+      toast.error(`Failed to log out: ${error.message}`);
+      setLoading(false);
+    }
+  };
+
+  if (loading && !user) {
+    return (
+      <div className="min-h-screen w-full space-bg animate-space flex items-center justify-center">
+        <StarField />
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-12 w-12 animate-spin text-space-purple" />
+          <p className="mt-4 text-lg">Loading settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full space-bg animate-space flex">
@@ -219,7 +298,6 @@ const SettingsPage: React.FC = () => {
                         id="email" 
                         type="email" 
                         value={email} 
-                        onChange={(e) => setEmail(e.target.value)}
                         className="bg-secondary/60" 
                         disabled={true}  // Email can't be changed directly
                       />
@@ -240,7 +318,12 @@ const SettingsPage: React.FC = () => {
                       </select>
                     </div>
                     <div className="flex justify-end">
-                      <Button type="submit" className="bg-space-purple hover:bg-space-purple/90">
+                      <Button 
+                        type="submit" 
+                        className="bg-space-purple hover:bg-space-purple/90"
+                        disabled={loading}
+                      >
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Profile
                       </Button>
                     </div>
@@ -308,7 +391,12 @@ const SettingsPage: React.FC = () => {
                     </div>
                     
                     <div className="flex justify-end">
-                      <Button type="submit" className="bg-space-purple hover:bg-space-purple/90">
+                      <Button 
+                        type="submit" 
+                        className="bg-space-purple hover:bg-space-purple/90"
+                        disabled={loading}
+                      >
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Preferences
                       </Button>
                     </div>
@@ -374,13 +462,17 @@ const SettingsPage: React.FC = () => {
                         type="button" 
                         variant="destructive" 
                         onClick={handleLogout}
+                        disabled={loading}
                       >
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Logout
                       </Button>
                       <Button 
                         type="submit" 
                         className="bg-space-purple hover:bg-space-purple/90"
+                        disabled={loading}
                       >
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Update Password
                       </Button>
                     </div>
