@@ -18,7 +18,7 @@ interface ExpenseFormProps {
     amount: number;
     category: string;
     date: Date;
-    note: string;
+    note?: string;  // Changed from required to optional
   }) => void;
   onCancel?: () => void;
   initialValues?: {
@@ -26,7 +26,7 @@ interface ExpenseFormProps {
     amount: number;
     category: string;
     date: Date;
-    note: string;
+    note?: string;  // Changed from required to optional
   };
   isEditing?: boolean;
 }
@@ -74,7 +74,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
         amount: parseFloat(amount.toString()),
         category,
         date,
-        note,
+        note, // This will be an empty string if not provided
       });
       
       // Reset form if not editing

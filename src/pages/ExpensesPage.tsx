@@ -60,7 +60,7 @@ const ExpensesPage: React.FC = () => {
     amount: number;
     category: string;
     date: Date;
-    note: string;
+    note?: string;
   }) => {
     const expenseToAdd: Expense = {
       id: Date.now(),
@@ -81,7 +81,7 @@ const ExpensesPage: React.FC = () => {
     amount: number;
     category: string;
     date: Date;
-    note: string;
+    note?: string;
   }) => {
     if (!currentExpense) return;
     
