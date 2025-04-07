@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
@@ -10,6 +9,7 @@ import { ArrowUpRight, ArrowDownRight, DollarSign, Calendar, Loader2 } from "luc
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
 const ReportsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -48,27 +48,27 @@ const ReportsPage: React.FC = () => {
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       
       const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
+        .from('expenses')
+        .select('*')
         .eq("user_id", userId)
         .gte("date", threeMonthsAgo.toISOString());
         
       if (error) throw error;
       
       // Transform expenses to match our application's format
-      const formattedExpenses = data.map(expense => ({
+      const formattedExpenses = data ? data.map(expense => ({
         id: expense.id,
         title: expense.title,
-        amount: parseFloat(expense.amount),
+        amount: parseFloat(expense.amount as unknown as string),
         category: expense.category,
-        date: new Date(expense.date),
+        date: new Date(expense.date as string),
         note: expense.note || undefined
-      }));
+      })) : [];
       
       setExpenses(formattedExpenses);
       
       // Calculate month-over-month changes
-      calculateMonthlyChanges(data);
+      calculateMonthlyChanges(data || []);
       
     } catch (error: any) {
       toast.error(`Failed to fetch reports data: ${error.message}`);
@@ -107,15 +107,15 @@ const ReportsPage: React.FC = () => {
     
     // Calculate totals
     const currentMonthTotal = currentMonthExpenses.reduce(
-      (sum, expense) => sum + parseFloat(expense.amount), 0
+      (sum, expense) => sum + parseFloat(expense.amount as unknown as string), 0
     );
     
     const previousMonthTotal = previousMonthExpenses.reduce(
-      (sum, expense) => sum + parseFloat(expense.amount), 0
+      (sum, expense) => sum + parseFloat(expense.amount as unknown as string), 0
     );
     
     const monthBeforeThatTotal = monthBeforeThatExpenses.reduce(
-      (sum, expense) => sum + parseFloat(expense.amount), 0
+      (sum, expense) => sum + parseFloat(expense.amount as unknown as string), 0
     );
     
     // Calculate percentage changes
@@ -139,15 +139,21 @@ const ReportsPage: React.FC = () => {
   
   const categories = [...new Set(expenses.map(exp => exp.category))];
   const categoryCounts = categories.map(category => {
+    const categoryExpenses = expenses.filter(exp => exp.category === category);
     return {
       category,
-      count: expenses.filter(exp => exp.category === category).length,
-      total: expenses.filter(exp => exp.category === category).reduce((sum, exp) => sum + exp.amount, 0)
+      count: categoryExpenses.length,
+      total: categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0)
     };
   });
   
-  const topCategory = categoryCounts.sort((a, b) => b.total - a.total)[0] || { category: 'None', total: 0 };
-  const mostFrequentCategory = categoryCounts.sort((a, b) => b.count - a.count)[0] || { category: 'None', count: 0 };
+  const topCategory = categoryCounts.length > 0 
+    ? categoryCounts.sort((a, b) => b.total - a.total)[0] 
+    : { category: 'None', total: 0 };
+    
+  const mostFrequentCategory = categoryCounts.length > 0
+    ? categoryCounts.sort((a, b) => b.count - a.count)[0]
+    : { category: 'None', count: 0 };
   
   // Get the current month name for display
   const currentMonthName = new Date().toLocaleString('default', { month: 'long' });

@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { Database } from "@/integrations/supabase/types";
 
 const Dashboard: React.FC = () => {
   const [chartData, setChartData] = useState<any[]>([]);
@@ -54,8 +55,8 @@ const Dashboard: React.FC = () => {
       
       // Get current month expenses
       const { data: currentMonthData, error: currentMonthError } = await supabase
-        .from("expenses")
-        .select("*")
+        .from('expenses')
+        .select('*')
         .eq("user_id", userId)
         .gte("date", firstDayOfMonth);
         
@@ -63,8 +64,8 @@ const Dashboard: React.FC = () => {
       
       // Get last month expenses
       const { data: lastMonthData, error: lastMonthError } = await supabase
-        .from("expenses")
-        .select("*")
+        .from('expenses')
+        .select('*')
         .eq("user_id", userId)
         .gte("date", firstDayOfLastMonth)
         .lte("date", lastDayOfLastMonth);
@@ -72,7 +73,7 @@ const Dashboard: React.FC = () => {
       if (lastMonthError) throw lastMonthError;
 
       // Process data for charts and statistics
-      processExpensesData(currentMonthData, lastMonthData);
+      processExpensesData(currentMonthData || [], lastMonthData || []);
       
     } catch (error: any) {
       toast.error(`Failed to fetch dashboard data: ${error.message}`);
@@ -86,13 +87,13 @@ const Dashboard: React.FC = () => {
   const processExpensesData = (currentMonthData: any[], lastMonthData: any[]) => {
     // Calculate total spent this month
     const currentMonthTotal = currentMonthData.reduce(
-      (sum, expense) => sum + parseFloat(expense.amount), 0
+      (sum, expense) => sum + parseFloat(expense.amount as unknown as string), 0
     );
     setTotalSpent(currentMonthTotal);
     
     // Calculate percentage change from last month
     const lastMonthTotal = lastMonthData.reduce(
-      (sum, expense) => sum + parseFloat(expense.amount), 0
+      (sum, expense) => sum + parseFloat(expense.amount as unknown as string), 0
     );
     
     const change = lastMonthTotal === 0 
@@ -104,7 +105,7 @@ const Dashboard: React.FC = () => {
     const categories = new Map<string, number>();
     currentMonthData.forEach((expense) => {
       const category = expense.category;
-      const amount = parseFloat(expense.amount);
+      const amount = parseFloat(expense.amount as unknown as string);
       categories.set(category, (categories.get(category) || 0) + amount);
     });
     
@@ -127,7 +128,7 @@ const Dashboard: React.FC = () => {
     const chartDataArray = Array.from(categories.entries()).map(([name, value]) => ({
       name,
       value,
-      color: categoryColors[name] || "#64748B" // Default color if category is not in the mapping
+      color: categoryColors[name as keyof typeof categoryColors] || "#64748B" // Default color if category is not in the mapping
     }));
     
     setChartData(chartDataArray);
@@ -139,7 +140,7 @@ const Dashboard: React.FC = () => {
       .map(expense => ({
         id: expense.id,
         title: expense.title,
-        amount: parseFloat(expense.amount),
+        amount: parseFloat(expense.amount as unknown as string),
         category: expense.category,
         date: new Date(expense.date).toLocaleDateString()
       }));

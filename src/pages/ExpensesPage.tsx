@@ -9,6 +9,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { Database } from "@/integrations/supabase/types";
+
+type DbExpense = Database['public']['Tables']['expenses']['Row'];
 
 const ExpensesPage: React.FC = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -43,22 +46,22 @@ const ExpensesPage: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
+        .from('expenses')
+        .select('*')
         .eq("user_id", userId)
         .order('date', { ascending: false });
 
       if (error) throw error;
 
       // Transform expenses to match our application's format
-      const formattedExpenses = data.map(expense => ({
+      const formattedExpenses: Expense[] = data ? data.map(expense => ({
         id: expense.id,
         title: expense.title,
-        amount: parseFloat(expense.amount),
+        amount: parseFloat(expense.amount as unknown as string),
         category: expense.category,
-        date: new Date(expense.date),
+        date: new Date(expense.date as string),
         note: expense.note || undefined
-      }));
+      })) : [];
 
       setExpenses(formattedExpenses);
     } catch (error: any) {
@@ -91,25 +94,27 @@ const ExpensesPage: React.FC = () => {
       };
 
       const { data, error } = await supabase
-        .from("expenses")
+        .from('expenses')
         .insert(expenseToAdd)
         .select()
         .single();
 
       if (error) throw error;
-
-      const addedExpense: Expense = {
-        id: data.id,
-        title: data.title,
-        amount: parseFloat(data.amount),
-        category: data.category,
-        date: new Date(data.date),
-        note: data.note || undefined
-      };
       
-      setExpenses((prev) => [addedExpense, ...prev]);
-      setIsAddDialogOpen(false);
-      toast.success("Expense added successfully!");
+      if (data) {
+        const addedExpense: Expense = {
+          id: data.id,
+          title: data.title,
+          amount: parseFloat(data.amount as unknown as string),
+          category: data.category,
+          date: new Date(data.date as string),
+          note: data.note || undefined
+        };
+        
+        setExpenses((prev) => [addedExpense, ...prev]);
+        setIsAddDialogOpen(false);
+        toast.success("Expense added successfully!");
+      }
     } catch (error: any) {
       toast.error(`Failed to add expense: ${error.message}`);
     }
@@ -139,7 +144,7 @@ const ExpensesPage: React.FC = () => {
       };
 
       const { error } = await supabase
-        .from("expenses")
+        .from('expenses')
         .update(expenseToUpdate)
         .eq("id", currentExpense.id)
         .eq("user_id", user.id);
@@ -166,7 +171,7 @@ const ExpensesPage: React.FC = () => {
     if (confirm("Are you sure you want to delete this expense?")) {
       try {
         const { error } = await supabase
-          .from("expenses")
+          .from('expenses')
           .delete()
           .eq("id", id)
           .eq("user_id", user.id);
