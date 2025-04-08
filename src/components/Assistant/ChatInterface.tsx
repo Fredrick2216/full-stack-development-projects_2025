@@ -33,6 +33,37 @@ const ChatInterface: React.FC = () => {
 
   useEffect(scrollToBottom, [messages]);
 
+  const generateDynamicResponse = (question: string): string => {
+    // Convert question to lowercase for easier comparison
+    const lowerQuestion = question.toLowerCase();
+    
+    // Dynamic response based on keywords in the question
+    if (lowerQuestion.includes("budget") || lowerQuestion.includes("budgeting")) {
+      return "Creating a budget is an important step in managing your finances. I recommend the 50/30/20 rule: 50% for needs, 30% for wants, and 20% for savings and debt repayment. Based on your recent spending, you might want to adjust your budget for dining out.";
+    } else if (lowerQuestion.includes("save") || lowerQuestion.includes("saving")) {
+      return "To improve your savings, consider automating transfers to a high-yield savings account right after payday. Based on your spending patterns, you could potentially save an additional $150 per month by reducing discretionary expenses.";
+    } else if (lowerQuestion.includes("invest") || lowerQuestion.includes("investment")) {
+      return "For investments, consider your risk tolerance and time horizon. A diversified portfolio typically includes a mix of stocks, bonds, and other assets. I'd recommend consulting with a financial advisor for personalized investment advice.";
+    } else if (lowerQuestion.includes("debt") || lowerQuestion.includes("loan")) {
+      return "To manage debt effectively, focus on high-interest debt first while making minimum payments on others. Consider the snowball method (smallest balance first) or avalanche method (highest interest first) depending on your preference.";
+    } else if (lowerQuestion.includes("expense") || lowerQuestion.includes("spending")) {
+      return "Looking at your recent expenses, your highest spending categories are housing, transportation, and food. Your spending in the food category has increased by 15% compared to last month.";
+    } else if (lowerQuestion.includes("report") || lowerQuestion.includes("analysis")) {
+      return "I can generate detailed financial reports based on your transaction history. Would you like to see a breakdown by category, a monthly comparison, or a year-to-date summary?";
+    } else if (lowerQuestion.includes("credit") || lowerQuestion.includes("credit score")) {
+      return "Maintaining a good credit score involves paying bills on time, keeping credit utilization low (under 30%), and monitoring your credit report regularly. Consider setting up automatic payments to avoid late fees.";
+    } else if (lowerQuestion.includes("tax") || lowerQuestion.includes("taxes")) {
+      return "For tax optimization, consider maximizing your retirement contributions, tracking deductible expenses throughout the year, and taking advantage of tax credits you may qualify for.";
+    } else if (lowerQuestion.includes("income") || lowerQuestion.includes("earn")) {
+      return "Based on your income patterns, you might want to consider diversifying your income streams. Side hustles, freelance work, or passive income sources could help increase your overall earnings.";
+    } else if (lowerQuestion.includes("retirement") || lowerQuestion.includes("retire")) {
+      return "For retirement planning, consider maximizing contributions to tax-advantaged accounts like 401(k)s and IRAs. Aim to save 15-20% of your income for retirement, and adjust your asset allocation as you get closer to retirement age.";
+    } else {
+      // Default response for questions that don't match specific categories
+      return "That's an interesting financial question. To give you a more personalized answer, could you provide more details about your specific situation? I'm here to help with budgeting, expense tracking, savings strategies, and other financial matters.";
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
     
@@ -48,19 +79,13 @@ const ChatInterface: React.FC = () => {
     setIsThinking(true);
     
     try {
-      // Simulate API delay - in a real app, we'd integrate with ChatGPT/Gemini here
+      // Simulate API delay - in a real app, we'd integrate with a real AI service
       setTimeout(() => {
-        const responses = [
-          "I can help you analyze your recent expenses. Would you like me to show you which categories you're spending the most on?",
-          "Based on your spending patterns, I recommend setting a budget of around $150 for your entertainment expenses next month.",
-          "Your expenses this month are 15% higher than last month, primarily due to increased spending in the Shopping category.",
-          "I notice you've been spending regularly at coffee shops. Setting up a dedicated 'Coffee' budget might help you track this specific expense.",
-          "Looking at your historical data, your highest expense months tend to be December and July. You might want to plan ahead for these periods.",
-        ];
+        const dynamicResponse = generateDynamicResponse(userMessage.text);
         
         const botMessage: Message = {
           id: `bot-${Date.now()}`,
-          text: responses[Math.floor(Math.random() * responses.length)],
+          text: dynamicResponse,
           sender: "bot",
           timestamp: new Date(),
         };
