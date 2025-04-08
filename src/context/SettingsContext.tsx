@@ -17,6 +17,10 @@ interface SettingsContextType {
   securityPreferences: SecurityPreferences;
   updateNotificationPreference: (key: keyof NotificationPreferences, value: boolean) => void;
   updateSecurityPreference: (key: keyof SecurityPreferences, value: boolean) => void;
+  // New functionality
+  checkBudgetStatus: () => { isOverBudget: boolean; percentUsed: number };
+  getUpcomingExpenses: () => Array<{ id: string; title: string; dueDate: string }>;
+  requiresTwoFactor: () => boolean;
 }
 
 const defaultNotificationPreferences: NotificationPreferences = {
@@ -72,6 +76,45 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
   };
+  
+  // New functionality implementation
+  const checkBudgetStatus = () => {
+    // This would normally query actual expense data and budget data
+    // For demo purposes, we'll return mock data
+    const budget = 3000;
+    const spent = Math.random() * 3500; // Random value for demonstration
+    const percentUsed = (spent / budget) * 100;
+    const isOverBudget = percentUsed > 100;
+    
+    // Only return alert data if budgetAlerts is enabled
+    if (!notificationPreferences.budgetAlerts) {
+      return { isOverBudget: false, percentUsed: 0 };
+    }
+    
+    return { isOverBudget, percentUsed };
+  };
+  
+  const getUpcomingExpenses = () => {
+    // This would normally query actual scheduled expenses
+    // For demo purposes, we'll return mock data
+    const mockExpenses = [
+      { id: "exp1", title: "Rent Payment", dueDate: "2025-04-15" },
+      { id: "exp2", title: "Car Insurance", dueDate: "2025-04-20" },
+      { id: "exp3", title: "Phone Bill", dueDate: "2025-04-25" }
+    ];
+    
+    // Only return expense reminders if expenseReminders is enabled
+    if (!notificationPreferences.expenseReminders) {
+      return [];
+    }
+    
+    return mockExpenses;
+  };
+  
+  const requiresTwoFactor = () => {
+    // Check if two-factor authentication is required based on security preferences
+    return securityPreferences.twoFactor;
+  };
 
   return (
     <SettingsContext.Provider
@@ -80,6 +123,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         securityPreferences,
         updateNotificationPreference,
         updateSecurityPreference,
+        checkBudgetStatus,
+        getUpcomingExpenses,
+        requiresTwoFactor,
       }}
     >
       {children}
