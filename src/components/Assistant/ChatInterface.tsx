@@ -37,31 +37,60 @@ const ChatInterface: React.FC = () => {
     // Convert question to lowercase for easier comparison
     const lowerQuestion = question.toLowerCase();
     
-    // Dynamic response based on keywords in the question
-    if (lowerQuestion.includes("budget") || lowerQuestion.includes("budgeting")) {
-      return "Creating a budget is an important step in managing your finances. I recommend the 50/30/20 rule: 50% for needs, 30% for wants, and 20% for savings and debt repayment. Based on your recent spending, you might want to adjust your budget for dining out.";
-    } else if (lowerQuestion.includes("save") || lowerQuestion.includes("saving")) {
-      return "To improve your savings, consider automating transfers to a high-yield savings account right after payday. Based on your spending patterns, you could potentially save an additional $150 per month by reducing discretionary expenses.";
-    } else if (lowerQuestion.includes("invest") || lowerQuestion.includes("investment")) {
-      return "For investments, consider your risk tolerance and time horizon. A diversified portfolio typically includes a mix of stocks, bonds, and other assets. I'd recommend consulting with a financial advisor for personalized investment advice.";
-    } else if (lowerQuestion.includes("debt") || lowerQuestion.includes("loan")) {
-      return "To manage debt effectively, focus on high-interest debt first while making minimum payments on others. Consider the snowball method (smallest balance first) or avalanche method (highest interest first) depending on your preference.";
-    } else if (lowerQuestion.includes("expense") || lowerQuestion.includes("spending")) {
-      return "Looking at your recent expenses, your highest spending categories are housing, transportation, and food. Your spending in the food category has increased by 15% compared to last month.";
-    } else if (lowerQuestion.includes("report") || lowerQuestion.includes("analysis")) {
-      return "I can generate detailed financial reports based on your transaction history. Would you like to see a breakdown by category, a monthly comparison, or a year-to-date summary?";
-    } else if (lowerQuestion.includes("credit") || lowerQuestion.includes("credit score")) {
-      return "Maintaining a good credit score involves paying bills on time, keeping credit utilization low (under 30%), and monitoring your credit report regularly. Consider setting up automatic payments to avoid late fees.";
-    } else if (lowerQuestion.includes("tax") || lowerQuestion.includes("taxes")) {
-      return "For tax optimization, consider maximizing your retirement contributions, tracking deductible expenses throughout the year, and taking advantage of tax credits you may qualify for.";
-    } else if (lowerQuestion.includes("income") || lowerQuestion.includes("earn")) {
-      return "Based on your income patterns, you might want to consider diversifying your income streams. Side hustles, freelance work, or passive income sources could help increase your overall earnings.";
-    } else if (lowerQuestion.includes("retirement") || lowerQuestion.includes("retire")) {
-      return "For retirement planning, consider maximizing contributions to tax-advantaged accounts like 401(k)s and IRAs. Aim to save 15-20% of your income for retirement, and adjust your asset allocation as you get closer to retirement age.";
-    } else {
-      // Default response for questions that don't match specific categories
-      return "That's an interesting financial question. To give you a more personalized answer, could you provide more details about your specific situation? I'm here to help with budgeting, expense tracking, savings strategies, and other financial matters.";
+    // Check for definition questions first
+    if (lowerQuestion.includes("what is") || lowerQuestion.includes("define") || lowerQuestion.includes("meaning") || lowerQuestion.includes("means")) {
+      if (lowerQuestion.includes("expense") || lowerQuestion.includes("expenses")) {
+        return "Expenses are costs or charges you incur to manage your daily life, business, or specific activities. These are the outflows of money from your account, like bills, groceries, rent, or entertainment costs that you pay for.";
+      } else if (lowerQuestion.includes("budget")) {
+        return "A budget is a financial plan that outlines your expected income and expenses for a specific period. It's a tool to help you allocate your money efficiently and ensure you don't spend more than you earn.";
+      } else if (lowerQuestion.includes("debt")) {
+        return "Debt refers to money that you've borrowed from a lender with the agreement to pay it back, usually with interest. Common forms include credit cards, mortgages, student loans, and personal loans.";
+      } else if (lowerQuestion.includes("interest")) {
+        return "Interest is the cost of borrowing money, typically expressed as a percentage rate. When you borrow, you pay interest; when you save or invest, you may earn interest on your money.";
+      } else if (lowerQuestion.includes("investment")) {
+        return "An investment is an asset purchased with the expectation that it will generate income or appreciate in value over time. Investments can include stocks, bonds, real estate, or starting a business.";
+      } else if (lowerQuestion.includes("credit score")) {
+        return "A credit score is a numerical rating that represents your creditworthiness based on your credit history. Higher scores (usually on a scale of 300-850) indicate lower risk to lenders and can help you secure better loan terms.";
+      }
     }
+    
+    // Check for report requests
+    if (lowerQuestion.includes("report") && lowerQuestion.includes("expense")) {
+      return "Based on your financial data, I can see that your spending this month totals $2,450. Your largest expenses are housing (35%), transportation (20%), food (15%), and utilities (10%). Compared to last month, your food expenses have increased by 12%, while your entertainment costs decreased by 8%.";
+    }
+    
+    // Check for savings questions
+    if (lowerQuestion.includes("save") || lowerQuestion.includes("saving")) {
+      return "Based on your current spending patterns, I see opportunities to increase your savings. You're currently spending about $320 monthly on dining out and food delivery. Reducing this by half could add $160 to your savings each month. Additionally, your subscription services total $95/month - reviewing these for services you don't frequently use could further increase your savings.";
+    }
+    
+    // Check for budget questions
+    if (lowerQuestion.includes("budget") || lowerQuestion.includes("spending")) {
+      return "Looking at your financial data, I recommend allocating your budget as follows: 35% for housing, 15% for food, 15% for transportation, 10% for utilities, 15% for savings and debt repayment, and 10% for discretionary spending. Based on your income, this would mean approximately $1,750 for housing, $750 for food, and so on.";
+    }
+    
+    // Check for investment questions
+    if (lowerQuestion.includes("invest") || lowerQuestion.includes("stocks")) {
+      return "Based on your financial profile, a diversified investment approach might work well for you. Consider allocating 60% to broad market index funds, 20% to bond funds (for stability), 10% to international stocks (for geographic diversification), and 10% to individual stocks or sectors you understand well. Remember that all investments carry risk, and this isn't personalized investment advice.";
+    }
+    
+    // Check for debt-related questions
+    if (lowerQuestion.includes("debt") || lowerQuestion.includes("loan")) {
+      return "Looking at your current debt profile, prioritizing payments on your highest interest debt (likely your credit card at 18.9% APR) would be most efficient. By increasing your monthly payment on this account by just $100, you could save approximately $480 in interest and pay it off 8 months sooner.";
+    }
+    
+    // Hello or greeting
+    if (lowerQuestion.includes("hello") || lowerQuestion.includes("hi") || lowerQuestion.includes("hey")) {
+      return "Hello! I'm your AI financial assistant. How can I help with your finances today? I can analyze expenses, help with budgeting, provide savings tips, or answer financial questions.";
+    }
+    
+    // Help or capabilities question
+    if (lowerQuestion.includes("help") || lowerQuestion.includes("what can you do") || lowerQuestion.includes("capabilities")) {
+      return "As your financial assistant, I can help you with expense tracking and analysis, budgeting advice, debt management strategies, savings tips, investment guidance (non-advisory), retirement planning basics, and answering general financial questions. What specific area would you like to focus on today?";
+    }
+    
+    // Default response for unknown questions - more personalized than before
+    return "I'm not sure I fully understand your question about '" + question + "'. Could you provide more details or rephrase it? I'm here to help with expense tracking, budgeting, savings strategies, debt management, and other financial matters.";
   };
 
   const handleSendMessage = async () => {
