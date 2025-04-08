@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { useSettings } from "@/context/SettingsContext";
 
 interface UserPreferences {
   firstName: string;
@@ -19,22 +20,12 @@ interface UserPreferences {
   currency: string;
 }
 
-interface NotificationPreferences {
-  budgetAlerts: boolean;
-  expenseReminders: boolean;
-  financialTips: boolean;
-  emailNotifications: boolean;
-}
-
-interface SecurityPreferences {
-  twoFactor: boolean;
-}
-
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("account");
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const { notificationPreferences, securityPreferences, updateNotificationPreference, updateSecurityPreference } = useSettings();
   
   // Profile state
   const [firstName, setFirstName] = useState("");
@@ -42,17 +33,10 @@ const SettingsPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [currency, setCurrency] = useState("USD");
   
-  // Notification state
-  const [budgetAlerts, setBudgetAlerts] = useState(true);
-  const [expenseReminders, setExpenseReminders] = useState(true);
-  const [financialTips, setFinancialTips] = useState(false);
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  
   // Security state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [twoFactor, setTwoFactor] = useState(false);
 
   // Fetch user on mount
   useEffect(() => {
@@ -86,23 +70,6 @@ const SettingsPage: React.FC = () => {
       setFirstName(prefs.firstName || "");
       setLastName(prefs.lastName || "");
       setCurrency(prefs.currency || "USD");
-    }
-    
-    // Load notification preferences
-    const savedNotificationPrefs = localStorage.getItem('notificationPreferences');
-    if (savedNotificationPrefs) {
-      const prefs: NotificationPreferences = JSON.parse(savedNotificationPrefs);
-      setBudgetAlerts(prefs.budgetAlerts);
-      setExpenseReminders(prefs.expenseReminders);
-      setFinancialTips(prefs.financialTips);
-      setEmailNotifications(prefs.emailNotifications);
-    }
-    
-    // Load security preferences
-    const savedSecurityPrefs = localStorage.getItem('securityPreferences');
-    if (savedSecurityPrefs) {
-      const prefs: SecurityPreferences = JSON.parse(savedSecurityPrefs);
-      setTwoFactor(prefs.twoFactor);
     }
   };
 
@@ -139,25 +106,7 @@ const SettingsPage: React.FC = () => {
   // Handle notification preferences update
   const handleSaveNotifications = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    try {
-      // Store notification preferences in localStorage
-      const notificationPreferences: NotificationPreferences = {
-        budgetAlerts,
-        expenseReminders,
-        financialTips,
-        emailNotifications
-      };
-      
-      localStorage.setItem('notificationPreferences', JSON.stringify(notificationPreferences));
-      
-      toast.success("Notification preferences updated!");
-    } catch (error: any) {
-      toast.error(`Failed to update notification preferences: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+    toast.success("Notification preferences updated!");
   };
 
   // Handle password update
@@ -200,13 +149,6 @@ const SettingsPage: React.FC = () => {
       });
       
       if (error) throw error;
-      
-      // Also update two-factor preference if needed
-      const securityPreferences: SecurityPreferences = {
-        twoFactor
-      };
-      
-      localStorage.setItem('securityPreferences', JSON.stringify(securityPreferences));
       
       setCurrentPassword("");
       setNewPassword("");
@@ -348,8 +290,8 @@ const SettingsPage: React.FC = () => {
                         </div>
                         <Switch 
                           id="budget-alerts" 
-                          checked={budgetAlerts} 
-                          onCheckedChange={setBudgetAlerts} 
+                          checked={notificationPreferences.budgetAlerts} 
+                          onCheckedChange={(value) => updateNotificationPreference('budgetAlerts', value)} 
                         />
                       </div>
                       
@@ -360,8 +302,8 @@ const SettingsPage: React.FC = () => {
                         </div>
                         <Switch 
                           id="expense-reminders" 
-                          checked={expenseReminders} 
-                          onCheckedChange={setExpenseReminders} 
+                          checked={notificationPreferences.expenseReminders} 
+                          onCheckedChange={(value) => updateNotificationPreference('expenseReminders', value)} 
                         />
                       </div>
                       
@@ -372,8 +314,8 @@ const SettingsPage: React.FC = () => {
                         </div>
                         <Switch 
                           id="tips" 
-                          checked={financialTips} 
-                          onCheckedChange={setFinancialTips} 
+                          checked={notificationPreferences.financialTips} 
+                          onCheckedChange={(value) => updateNotificationPreference('financialTips', value)} 
                         />
                       </div>
                       
@@ -384,8 +326,8 @@ const SettingsPage: React.FC = () => {
                         </div>
                         <Switch 
                           id="email-notifications" 
-                          checked={emailNotifications} 
-                          onCheckedChange={setEmailNotifications} 
+                          checked={notificationPreferences.emailNotifications} 
+                          onCheckedChange={(value) => updateNotificationPreference('emailNotifications', value)} 
                         />
                       </div>
                     </div>
@@ -450,8 +392,8 @@ const SettingsPage: React.FC = () => {
                       <div className="flex items-center space-x-2 pt-2">
                         <Switch 
                           id="two-factor" 
-                          checked={twoFactor}
-                          onCheckedChange={setTwoFactor}
+                          checked={securityPreferences.twoFactor}
+                          onCheckedChange={(value) => updateSecurityPreference('twoFactor', value)}
                         />
                         <Label htmlFor="two-factor">Enable Two-Factor Authentication</Label>
                       </div>
