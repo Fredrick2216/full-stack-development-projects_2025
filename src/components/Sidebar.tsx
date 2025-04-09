@@ -63,12 +63,12 @@ const Sidebar: React.FC<SidebarProps> = ({ className }) => {
         <div className="flex items-center gap-2">
           <div className="relative">
             <div className="h-8 w-8 rounded-full bg-space-purple flex items-center justify-center text-white font-bold">
-              SE
+              BS
             </div>
             <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-sidebar"></span>
           </div>
           <div>
-            <h2 className="font-semibold text-lg">Smart Expense</h2>
+            <h2 className="font-semibold text-lg">Budget Savvy</h2>
             <p className="text-xs text-sidebar-foreground/70">Financial Tracker</p>
           </div>
         </div>
