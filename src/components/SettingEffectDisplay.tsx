@@ -7,20 +7,6 @@ import { toast } from "sonner";
 export const SettingEffectDisplay: React.FC = () => {
   const { notificationPreferences, securityPreferences } = useSettings();
   
-  // Demonstrate email notification functionality
-  useEffect(() => {
-    if (notificationPreferences.emailNotifications) {
-      // This would normally connect to a backend service
-      const checkForEmails = setTimeout(() => {
-        toast.info("Email digest ready", {
-          description: "Your weekly financial summary has been emailed to you.",
-        });
-      }, 10000); // Show after 10 seconds if enabled
-      
-      return () => clearTimeout(checkForEmails);
-    }
-  }, [notificationPreferences.emailNotifications]);
-  
   // Demonstrate financial tips functionality
   useEffect(() => {
     if (notificationPreferences.financialTips) {
