@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,7 +18,7 @@ interface ExpenseFormProps {
     amount: number;
     category: string;
     date: Date;
-    note?: string;  // Changed from required to optional
+    note?: string;
   }) => void;
   onCancel?: () => void;
   initialValues?: {
@@ -26,7 +26,7 @@ interface ExpenseFormProps {
     amount: number;
     category: string;
     date: Date;
-    note?: string;  // Changed from required to optional
+    note?: string;
   };
   isEditing?: boolean;
 }
@@ -46,6 +46,16 @@ const categories = [
   "Electronics",
 ];
 
+// Currency symbols mapping
+const currencySymbols: Record<string, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  INR: "₹",
+  JPY: "¥",
+  CAD: "C$",
+};
+
 const ExpenseForm: React.FC<ExpenseFormProps> = ({
   onSubmit,
   onCancel,
@@ -58,6 +68,24 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const [date, setDate] = useState<Date>(initialValues?.date || new Date());
   const [note, setNote] = useState(initialValues?.note || "");
   const [submitting, setSubmitting] = useState(false);
+  const [currency, setCurrency] = useState("USD");
+  const [currencySymbol, setCurrencySymbol] = useState(currencySymbols["USD"]);
+  
+  // Load user's preferred currency from localStorage
+  useEffect(() => {
+    const loadCurrency = () => {
+      const savedUserPrefs = localStorage.getItem('userPreferences');
+      if (savedUserPrefs) {
+        const prefs = JSON.parse(savedUserPrefs);
+        if (prefs.currency) {
+          setCurrency(prefs.currency);
+          setCurrencySymbol(currencySymbols[prefs.currency] || "$");
+        }
+      }
+    };
+    
+    loadCurrency();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,7 +147,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
           </div>
           
           <div className="grid gap-2">
-            <Label htmlFor="amount">Amount ($)</Label>
+            <Label htmlFor="amount">Amount ({currencySymbol})</Label>
             <Input
               id="amount"
               type="number"
@@ -165,7 +193,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
                   {date ? format(date, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0 bg-card">
                 <Calendar
                   mode="single"
                   selected={date}
