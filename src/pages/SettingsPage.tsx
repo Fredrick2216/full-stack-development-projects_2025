@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
@@ -27,18 +26,15 @@ const SettingsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { notificationPreferences, securityPreferences, updateNotificationPreference, updateSecurityPreference } = useSettings();
   
-  // Profile state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [currency, setCurrency] = useState("USD");
   
-  // Security state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Fetch user on mount
   useEffect(() => {
     const getUser = async () => {
       setLoading(true);
@@ -48,7 +44,6 @@ const SettingsPage: React.FC = () => {
         setUser(session.user);
         setEmail(session.user.email || "");
         
-        // Fetch user preferences from localStorage
         loadUserPreferences();
       } else {
         toast.error("Please login to access settings");
@@ -61,9 +56,7 @@ const SettingsPage: React.FC = () => {
     getUser();
   }, [navigate]);
 
-  // Load preferences from localStorage
   const loadUserPreferences = () => {
-    // Load user preferences
     const savedUserPrefs = localStorage.getItem('userPreferences');
     if (savedUserPrefs) {
       const prefs: UserPreferences = JSON.parse(savedUserPrefs);
@@ -73,13 +66,11 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  // Handle profile update
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
     try {
-      // Store user preferences in localStorage
       const userPreferences: UserPreferences = {
         firstName,
         lastName,
@@ -88,7 +79,6 @@ const SettingsPage: React.FC = () => {
       
       localStorage.setItem('userPreferences', JSON.stringify(userPreferences));
       
-      // Update user metadata in Supabase (optional)
       const { error } = await supabase.auth.updateUser({
         data: { firstName, lastName, preferredCurrency: currency }
       });
@@ -103,13 +93,11 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  // Handle notification preferences update
   const handleSaveNotifications = async (e: React.FormEvent) => {
     e.preventDefault();
     toast.success("Notification preferences updated!");
   };
 
-  // Handle password update
   const handleSaveSecurity = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -133,7 +121,6 @@ const SettingsPage: React.FC = () => {
     }
     
     try {
-      // First verify current password by attempting to sign in
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: user.email,
         password: currentPassword
@@ -143,7 +130,6 @@ const SettingsPage: React.FC = () => {
         throw new Error("Current password is incorrect");
       }
       
-      // If verification passed, update the password
       const { error } = await supabase.auth.updateUser({ 
         password: newPassword 
       });
@@ -162,7 +148,6 @@ const SettingsPage: React.FC = () => {
     }
   };
   
-  // Handle logout
   const handleLogout = async () => {
     setLoading(true);
     try {
@@ -241,7 +226,7 @@ const SettingsPage: React.FC = () => {
                         type="email" 
                         value={email} 
                         className="bg-secondary/60" 
-                        disabled={true}  // Email can't be changed directly
+                        disabled={true} 
                       />
                     </div>
                     <div className="space-y-2">
@@ -255,6 +240,7 @@ const SettingsPage: React.FC = () => {
                         <option value="USD">US Dollar ($)</option>
                         <option value="EUR">Euro (€)</option>
                         <option value="GBP">British Pound (£)</option>
+                        <option value="INR">Indian Rupee (₹)</option>
                         <option value="JPY">Japanese Yen (¥)</option>
                         <option value="CAD">Canadian Dollar (C$)</option>
                       </select>
