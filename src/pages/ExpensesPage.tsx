@@ -60,7 +60,8 @@ const ExpensesPage: React.FC = () => {
         amount: parseFloat(expense.amount as unknown as string),
         category: expense.category,
         date: new Date(expense.date as string),
-        note: expense.note || undefined
+        note: expense.note || undefined,
+        currency: expense.currency || "USD" // Default to USD if no currency specified
       })) : [];
 
       setExpenses(formattedExpenses);
@@ -77,6 +78,7 @@ const ExpensesPage: React.FC = () => {
     category: string;
     date: Date;
     note?: string;
+    currency: string;
   }) => {
     try {
       if (!user) {
@@ -90,7 +92,8 @@ const ExpensesPage: React.FC = () => {
         amount: newExpense.amount,
         category: newExpense.category,
         date: newExpense.date.toISOString(),
-        note: newExpense.note || null
+        note: newExpense.note || null,
+        currency: newExpense.currency
       };
 
       const { data, error } = await supabase
@@ -108,7 +111,8 @@ const ExpensesPage: React.FC = () => {
           amount: parseFloat(data.amount as unknown as string),
           category: data.category,
           date: new Date(data.date as string),
-          note: data.note || undefined
+          note: data.note || undefined,
+          currency: data.currency
         };
         
         setExpenses((prev) => [addedExpense, ...prev]);
@@ -131,6 +135,7 @@ const ExpensesPage: React.FC = () => {
     category: string;
     date: Date;
     note?: string;
+    currency: string;
   }) => {
     if (!currentExpense || !user) return;
     
@@ -140,13 +145,14 @@ const ExpensesPage: React.FC = () => {
         amount: updatedExpense.amount,
         category: updatedExpense.category,
         date: updatedExpense.date.toISOString(),
-        note: updatedExpense.note || null
+        note: updatedExpense.note || null,
+        currency: updatedExpense.currency
       };
 
       const { error } = await supabase
         .from('expenses')
         .update(expenseToUpdate)
-        .eq("id", String(currentExpense.id)) // Convert id to string
+        .eq("id", String(currentExpense.id))
         .eq("user_id", user.id);
 
       if (error) throw error;
@@ -173,7 +179,7 @@ const ExpensesPage: React.FC = () => {
         const { error } = await supabase
           .from('expenses')
           .delete()
-          .eq("id", String(id)) // Convert id to string
+          .eq("id", String(id))
           .eq("user_id", user.id);
 
         if (error) throw error;

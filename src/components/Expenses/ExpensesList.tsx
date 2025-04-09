@@ -6,19 +6,30 @@ import { Edit, Trash2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export interface Expense {
-  id: string | number;  // Updated type to handle UUID from Supabase
+  id: string | number;
   title: string;
   amount: number;
   category: string;
   date: Date | string;
   note?: string;
+  currency?: string;  // Added currency field
 }
 
 interface ExpensesListProps {
   expenses: Expense[];
   onEdit: (expense: Expense) => void;
-  onDelete: (id: string | number) => void;  // Updated type to handle UUID from Supabase
+  onDelete: (id: string | number) => void;
 }
+
+// Currency symbols mapping
+const currencySymbols: Record<string, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  INR: "₹",
+  JPY: "¥",
+  CAD: "C$",
+};
 
 const ExpensesList: React.FC<ExpensesListProps> = ({
   expenses,
@@ -39,6 +50,14 @@ const ExpensesList: React.FC<ExpensesListProps> = ({
       return new Date(date).toLocaleDateString();
     }
     return date.toLocaleDateString();
+  };
+
+  // Get the currency symbol for an expense
+  const getCurrencySymbol = (expense: Expense): string => {
+    if (expense.currency && currencySymbols[expense.currency]) {
+      return currencySymbols[expense.currency];
+    }
+    return "$"; // Default to USD if no currency specified
   };
 
   return (
@@ -74,7 +93,9 @@ const ExpensesList: React.FC<ExpensesListProps> = ({
                     <td className="py-3 text-sm">{expense.title}</td>
                     <td className="py-3 text-sm">{expense.category}</td>
                     <td className="py-3 text-sm">{formatDate(expense.date)}</td>
-                    <td className="py-3 text-sm text-right font-medium">${expense.amount.toFixed(2)}</td>
+                    <td className="py-3 text-sm text-right font-medium">
+                      {getCurrencySymbol(expense)}{expense.amount.toFixed(2)}
+                    </td>
                     <td className="py-3 text-sm text-right">
                       <div className="flex justify-end gap-2">
                         <Button

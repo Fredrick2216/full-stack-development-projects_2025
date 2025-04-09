@@ -9,6 +9,7 @@ interface Expense {
   amount: number;
   category: string;
   date: string;
+  currency?: string;
 }
 
 interface RecentExpensesProps {
@@ -53,7 +54,25 @@ const getCategoryColor = (category: string) => {
   }
 };
 
+// Currency symbols mapping
+const currencySymbols: Record<string, string> = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  INR: "₹",
+  JPY: "¥",
+  CAD: "C$",
+};
+
 const RecentExpenses: React.FC<RecentExpensesProps> = ({ expenses }) => {
+  // Get the currency symbol for an expense
+  const getCurrencySymbol = (expense: Expense): string => {
+    if (expense.currency && currencySymbols[expense.currency]) {
+      return currencySymbols[expense.currency];
+    }
+    return "$"; // Default to USD if no currency specified
+  };
+
   return (
     <Card className="bg-card/90 backdrop-blur-sm border-space-purple/20 hover:border-space-purple/30 transition-all duration-300">
       <CardHeader className="pb-2">
@@ -77,7 +96,7 @@ const RecentExpenses: React.FC<RecentExpensesProps> = ({ expenses }) => {
                     <p className="text-xs text-muted-foreground">{expense.date}</p>
                   </div>
                 </div>
-                <p className="font-semibold">${expense.amount.toFixed(2)}</p>
+                <p className="font-semibold">{getCurrencySymbol(expense)}{expense.amount.toFixed(2)}</p>
               </div>
             ))
           ) : (

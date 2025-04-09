@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +18,7 @@ interface ExpenseFormProps {
     category: string;
     date: Date;
     note?: string;
+    currency: string;
   }) => void;
   onCancel?: () => void;
   initialValues?: {
@@ -27,6 +27,7 @@ interface ExpenseFormProps {
     category: string;
     date: Date;
     note?: string;
+    currency?: string;
   };
   isEditing?: boolean;
 }
@@ -56,6 +57,16 @@ const currencySymbols: Record<string, string> = {
   CAD: "C$",
 };
 
+// Available currencies
+const currencies = [
+  { code: "USD", name: "US Dollar ($)" },
+  { code: "EUR", name: "Euro (€)" },
+  { code: "GBP", name: "British Pound (£)" },
+  { code: "INR", name: "Indian Rupee (₹)" },
+  { code: "JPY", name: "Japanese Yen (¥)" },
+  { code: "CAD", name: "Canadian Dollar (C$)" },
+];
+
 const ExpenseForm: React.FC<ExpenseFormProps> = ({
   onSubmit,
   onCancel,
@@ -68,24 +79,32 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
   const [date, setDate] = useState<Date>(initialValues?.date || new Date());
   const [note, setNote] = useState(initialValues?.note || "");
   const [submitting, setSubmitting] = useState(false);
-  const [currency, setCurrency] = useState("USD");
-  const [currencySymbol, setCurrencySymbol] = useState(currencySymbols["USD"]);
+  const [currency, setCurrency] = useState(initialValues?.currency || "USD");
+  const [currencySymbol, setCurrencySymbol] = useState(currencySymbols[initialValues?.currency || "USD"] || "$");
   
-  // Load user's preferred currency from localStorage
+  // Load user's preferred currency from localStorage for new expenses
   useEffect(() => {
-    const loadCurrency = () => {
-      const savedUserPrefs = localStorage.getItem('userPreferences');
-      if (savedUserPrefs) {
-        const prefs = JSON.parse(savedUserPrefs);
-        if (prefs.currency) {
-          setCurrency(prefs.currency);
-          setCurrencySymbol(currencySymbols[prefs.currency] || "$");
+    if (!isEditing) {
+      const loadCurrency = () => {
+        const savedUserPrefs = localStorage.getItem('userPreferences');
+        if (savedUserPrefs) {
+          const prefs = JSON.parse(savedUserPrefs);
+          if (prefs.currency) {
+            setCurrency(prefs.currency);
+            setCurrencySymbol(currencySymbols[prefs.currency] || "$");
+          }
         }
-      }
-    };
-    
-    loadCurrency();
-  }, []);
+      };
+      
+      loadCurrency();
+    }
+  }, [isEditing]);
+
+  // Update currency symbol when currency changes
+  const handleCurrencyChange = (value: string) => {
+    setCurrency(value);
+    setCurrencySymbol(currencySymbols[value] || "$");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +121,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
         amount: parseFloat(amount.toString()),
         category,
         date,
-        note, // This will be an empty string if not provided
+        note,
+        currency,
       });
       
       // Reset form if not editing
@@ -112,6 +132,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
         setCategory("");
         setDate(new Date());
         setNote("");
+        // Keep the selected currency for convenience
       }
       
       toast.success(isEditing ? "Expense updated successfully!" : "Expense added successfully!");
@@ -146,19 +167,37 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({
             />
           </div>
           
-          <div className="grid gap-2">
-            <Label htmlFor="amount">Amount ({currencySymbol})</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(parseFloat(e.target.value))}
-              className="bg-secondary/60"
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="amount">Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(parseFloat(e.target.value))}
+                className="bg-secondary/60"
+                required
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="currency">Currency</Label>
+              <Select value={currency} onValueChange={handleCurrencyChange}>
+                <SelectTrigger id="currency" className="bg-secondary/60">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {currencies.map((curr) => (
+                    <SelectItem key={curr.code} value={curr.code}>
+                      {curr.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           <div className="grid gap-2">
