@@ -61,7 +61,7 @@ const ExpensesPage: React.FC = () => {
         category: expense.category,
         date: new Date(expense.date as string),
         note: expense.note || undefined,
-        currency: expense.currency || "USD" // Default to USD if no currency specified
+        currency: expense.currency || "USD" // Use the database currency or default to USD
       })) : [];
 
       setExpenses(formattedExpenses);
@@ -112,7 +112,7 @@ const ExpensesPage: React.FC = () => {
           category: data.category,
           date: new Date(data.date as string),
           note: data.note || undefined,
-          currency: data.currency
+          currency: data.currency || "USD" // Use the database currency or default to USD
         };
         
         setExpenses((prev) => [addedExpense, ...prev]);
