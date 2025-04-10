@@ -54,7 +54,7 @@ const ExpensesPage: React.FC = () => {
       if (error) throw error;
 
       // Transform expenses to match our application's format
-      const formattedExpenses: Expense[] = data ? data.map(expense => ({
+      const formattedExpenses: Expense[] = data ? data.map((expense: DbExpense) => ({
         id: expense.id,
         title: expense.title,
         amount: parseFloat(expense.amount as unknown as string),
