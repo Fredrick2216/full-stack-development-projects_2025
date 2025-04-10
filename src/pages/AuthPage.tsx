@@ -4,6 +4,7 @@ import StarField from "@/components/StarField";
 import AuthForm from "@/components/AuthForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 interface LocationState {
   defaultTab?: "login" | "register";
@@ -31,6 +32,17 @@ const AuthPage: React.FC = () => {
     };
     
     checkUser();
+    
+    // Listen for authentication state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && event === 'SIGNED_IN') {
+        navigate('/dashboard');
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
   
   return (
@@ -45,7 +57,14 @@ const AuthPage: React.FC = () => {
             {defaultTab === "login" ? "Welcome back! Sign in to your account" : "Create an account to get started"}
           </p>
         </div>
-        {!isLoading && <AuthForm defaultTab={defaultTab} />}
+        {isLoading ? (
+          <div className="flex flex-col items-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-space-purple" />
+            <p className="mt-4">Checking authentication...</p>
+          </div>
+        ) : (
+          <AuthForm defaultTab={defaultTab} />
+        )}
       </div>
     </div>
   );

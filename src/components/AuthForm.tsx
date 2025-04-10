@@ -56,21 +56,53 @@ const AuthForm = ({ defaultTab = "login" }: AuthFormProps) => {
         navigate("/dashboard");
         
       } else {
-        const { error } = await supabase.auth.signUp({
+        // For registration - add user to auth and create profile
+        const { error, data } = await supabase.auth.signUp({
           email: values.email,
           password: values.password,
           options: {
             emailRedirectTo: window.location.origin + "/dashboard",
+            data: {
+              email: values.email,
+              // Add additional user metadata if needed
+            }
           },
         });
         
         if (error) throw error;
         
-        toast.success("Registration successful! Please check your email to verify your account.");
-        setActiveTab("login");
+        if (data.user) {
+          // Log successful registration event
+          await supabase
+            .from('auth_logs')
+            .insert({
+              user_id: data.user.id,
+              event_type: 'signup',
+              details: { method: 'email' }
+            });
+          
+          toast.success("Registration successful! Please check your email to verify your account.");
+        } else {
+          toast.info("Registration submitted. Please check your email to continue.");
+        }
       }
     } catch (error: any) {
-      toast.error(error.message || "Authentication failed");
+      let errorMessage = "Authentication failed";
+      
+      if (error.message) {
+        // Handle common error cases
+        if (error.message.includes("Email not confirmed")) {
+          errorMessage = "Please verify your email address before logging in";
+        } else if (error.message.includes("Invalid login credentials")) {
+          errorMessage = "Invalid email or password";
+        } else if (error.message.includes("already registered")) {
+          errorMessage = "This email is already registered. Please log in instead";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast.error(errorMessage);
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -110,6 +142,7 @@ const AuthForm = ({ defaultTab = "login" }: AuthFormProps) => {
                         className="bg-secondary/60"
                         type="email"
                         disabled={isLoading}
+                        autoComplete="email"
                       />
                     </FormControl>
                     <FormMessage />
@@ -130,6 +163,7 @@ const AuthForm = ({ defaultTab = "login" }: AuthFormProps) => {
                         className="bg-secondary/60"
                         type="password"
                         disabled={isLoading}
+                        autoComplete={activeTab === "login" ? "current-password" : "new-password"}
                       />
                     </FormControl>
                     <FormMessage />

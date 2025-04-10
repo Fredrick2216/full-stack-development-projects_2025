@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
@@ -9,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
 
 const Dashboard: React.FC = () => {
   const [chartData, setChartData] = useState<any[]>([]);
@@ -40,6 +38,21 @@ const Dashboard: React.FC = () => {
     };
     
     checkUser();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          navigate("/auth");
+        } else if (!session) {
+          navigate("/auth");
+        }
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   // Fetch expenses data for dashboard
@@ -147,6 +160,18 @@ const Dashboard: React.FC = () => {
       
     setRecentExpenses(recentExpensesData);
   };
+
+  if (loading && !user) {
+    return (
+      <div className="min-h-screen w-full space-bg animate-space flex items-center justify-center">
+        <StarField />
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-space-purple" />
+          <p className="mt-4">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full space-bg animate-space flex">
