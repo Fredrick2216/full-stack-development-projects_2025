@@ -3,13 +3,13 @@ import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
 import BarChartComponent from "@/components/Reports/BarChartComponent";
 import CategoryDistribution from "@/components/Reports/CategoryDistribution";
+import LineChartComponent from "@/components/Reports/LineChartComponent";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight, ArrowDownRight, DollarSign, Calendar, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Database } from "@/integrations/supabase/types";
 
 interface CategorySummary {
   category: string;
@@ -180,6 +180,7 @@ const ReportsPage: React.FC = () => {
               </TabsList>
               
               <TabsContent value="overview" className="space-y-6">
+                <LineChartComponent expenses={expenses} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <CategoryDistribution expenses={expenses} />
                   <BarChartComponent expenses={expenses} />
