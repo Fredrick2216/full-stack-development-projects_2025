@@ -23,9 +23,13 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const AuthForm = () => {
+interface AuthFormProps {
+  defaultTab?: "login" | "register";
+}
+
+const AuthForm = ({ defaultTab = "login" }: AuthFormProps) => {
   const [isLoading, setIsLoading] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<"login" | "register">("login");
+  const [activeTab, setActiveTab] = React.useState<"login" | "register">(defaultTab);
   const navigate = useNavigate();
 
   const form = useForm<FormValues>({

@@ -3,11 +3,18 @@ import React, { useState, useEffect } from "react";
 import StarField from "@/components/StarField";
 import AuthForm from "@/components/AuthForm";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+
+interface LocationState {
+  defaultTab?: "login" | "register";
+}
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const state = location.state as LocationState | null;
+  const defaultTab = state?.defaultTab || "login";
   
   useEffect(() => {
     // Check if user is already logged in
@@ -38,7 +45,7 @@ const AuthPage: React.FC = () => {
             Track, analyze, and optimize your financial journey
           </p>
         </div>
-        {!isLoading && <AuthForm />}
+        {!isLoading && <AuthForm defaultTab={defaultTab} />}
       </div>
     </div>
   );
