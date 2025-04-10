@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowRight, BarChart2, PiggyBank, TrendingUp, Shield, CheckCircle, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -91,14 +91,16 @@ const LandingPage: React.FC = () => {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              onClick={handleLogin}
-              className="hover:text-space-purple hover:scale-105 transition-all"
-              whileHover={{ scale: 1.05 }}
-            >
-              Login
-            </Button>
+            {/* Fix: Wrap Button in motion.div instead of using whileHover on Button directly */}
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <Button 
+                variant="ghost" 
+                onClick={handleLogin}
+                className="hover:text-space-purple transition-all"
+              >
+                Login
+              </Button>
+            </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button 
                 onClick={handleGetStarted}
