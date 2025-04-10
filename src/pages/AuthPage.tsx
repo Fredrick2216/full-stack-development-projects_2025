@@ -42,7 +42,7 @@ const AuthPage: React.FC = () => {
             Budget Savvy
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Track, analyze, and optimize your financial journey
+            {defaultTab === "login" ? "Welcome back! Sign in to your account" : "Create an account to get started"}
           </p>
         </div>
         {!isLoading && <AuthForm defaultTab={defaultTab} />}
