@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 
 interface LocationState {
   defaultTab?: "login" | "register";
+  forceShowForm?: boolean;
 }
 
 const AuthPage: React.FC = () => {
@@ -15,9 +16,10 @@ const AuthPage: React.FC = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   
-  // Extract the defaultTab from location state
+  // Extract the defaultTab and forceShowForm from location state
   const state = location.state as LocationState | null;
   const defaultTab = state?.defaultTab || "login";
+  const forceShowForm = state?.forceShowForm || false;
   
   useEffect(() => {
     // Check if user is already logged in
@@ -25,8 +27,8 @@ const AuthPage: React.FC = () => {
       setIsLoading(true);
       const { data } = await supabase.auth.getSession();
       
-      if (data.session) {
-        // User is logged in, redirect to dashboard
+      if (data.session && !forceShowForm) {
+        // User is logged in and not forcing form display, redirect to dashboard
         navigate('/dashboard');
       }
       
@@ -37,7 +39,7 @@ const AuthPage: React.FC = () => {
     
     // Listen for authentication state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !forceShowForm) {
         navigate('/dashboard');
       }
     });
@@ -45,7 +47,7 @@ const AuthPage: React.FC = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, forceShowForm]);
   
   return (
     <div className="min-h-screen w-full space-bg animate-space flex items-center justify-center px-4">

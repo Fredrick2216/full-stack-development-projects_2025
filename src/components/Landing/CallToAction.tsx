@@ -9,7 +9,7 @@ const CallToAction: React.FC = () => {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate("/auth", { state: { defaultTab: "register" } });
+    navigate("/auth", { state: { defaultTab: "register", forceShowForm: true } });
   };
 
   return (

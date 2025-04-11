@@ -13,11 +13,11 @@ const Header: React.FC<HeaderProps> = ({ activeSection }) => {
   const navigate = useNavigate();
   
   const handleGetStarted = () => {
-    navigate("/auth", { state: { defaultTab: "register" } });
+    navigate("/auth", { state: { defaultTab: "register", forceShowForm: true } });
   };
   
   const handleLogin = () => {
-    navigate("/auth", { state: { defaultTab: "login" } });
+    navigate("/auth", { state: { defaultTab: "login", forceShowForm: true } });
   };
 
   return (
