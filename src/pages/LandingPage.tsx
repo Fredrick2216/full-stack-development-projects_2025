@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +8,6 @@ const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("hero");
   
-  // Handle scroll effect for active section
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 200;
@@ -29,16 +27,16 @@ const LandingPage: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Navigation functions
   const handleGetStarted = () => {
+    console.log("Navigate to register");
     navigate("/auth", { state: { defaultTab: "register" } });
   };
   
   const handleLogin = () => {
+    console.log("Navigate to login");
     navigate("/auth", { state: { defaultTab: "login" } });
   };
-  
-  // Animation variants
+
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 },
@@ -54,8 +52,7 @@ const LandingPage: React.FC = () => {
       }
     }
   };
-  
-  // Features data
+
   const features = [
     {
       icon: <TrendingUp className="h-7 w-7" />,
@@ -97,14 +94,12 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/80 overflow-x-hidden">
-      {/* Animated Background Elements */}
       <div className="fixed inset-0 z-0">
         <div aria-hidden="true" className="absolute top-0 left-0 w-96 h-96 bg-space-purple/10 rounded-full blur-3xl animate-blob"></div>
         <div aria-hidden="true" className="absolute bottom-0 right-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
         <div aria-hidden="true" className="absolute top-1/2 left-1/2 w-96 h-96 bg-space-purple/5 rounded-full blur-3xl animate-blob animation-delay-4000"></div>
       </div>
       
-      {/* Header with Glassmorphism */}
       <header className="sticky top-0 z-50 backdrop-blur-sm bg-background/80 border-b border-border/40 transition-all duration-200">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <motion.div 
@@ -170,7 +165,6 @@ const LandingPage: React.FC = () => {
         </div>
       </header>
       
-      {/* Hero Section */}
       <section id="hero" className="relative z-10 pt-20 pb-32">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
@@ -207,7 +201,6 @@ const LandingPage: React.FC = () => {
               </motion.div>
             </motion.div>
             
-            {/* Hero Image/Animation */}
             <motion.div 
               className="w-full lg:w-1/2 relative"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -215,12 +208,8 @@ const LandingPage: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <div className="relative">
-                {/* Glow effect */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-space-purple/20 to-accent/20 rounded-xl blur-xl"></div>
-                
-                {/* Dashboard mockup */}
                 <div className="relative bg-card border border-border rounded-xl overflow-hidden shadow-2xl">
-                  {/* Browser mockup */}
                   <div className="bg-muted/50 p-3 border-b border-border flex items-center gap-2">
                     <div className="flex gap-1.5">
                       <div className="h-3 w-3 rounded-full bg-red-500"></div>
@@ -232,7 +221,6 @@ const LandingPage: React.FC = () => {
                     </div>
                   </div>
                   
-                  {/* Dashboard UI */}
                   <div className="bg-card/30 backdrop-blur-sm p-6">
                     <div className="flex items-center justify-between mb-6">
                       <div className="space-y-1">
@@ -245,7 +233,6 @@ const LandingPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    {/* Mock charts */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
                       <motion.div 
                         className="bg-background/60 backdrop-blur-md rounded-lg p-4 col-span-2"
@@ -350,7 +337,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       
-      {/* Features Section */}
       <section id="features" className="py-24 bg-gradient-to-b from-background/50 to-background relative z-10">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -391,7 +377,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       
-      {/* How It Works */}
       <section id="how-it-works" className="py-24 relative z-10">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -408,7 +393,6 @@ const LandingPage: React.FC = () => {
           </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            {/* Connecting line */}
             <div className="hidden md:block absolute top-24 left-0 w-full h-0.5 bg-gradient-to-r from-space-purple/0 via-space-purple/30 to-accent/0"></div>
             
             {[
@@ -451,7 +435,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       
-      {/* Pricing */}
       <section id="pricing" className="py-24 bg-gradient-to-b from-background/30 to-background relative z-10">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -562,7 +545,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       
-      {/* CTA Section */}
       <section className="py-24 relative z-10">
         <div className="container mx-auto px-4">
           <motion.div 
@@ -593,7 +575,6 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
       
-      {/* Footer */}
       <footer className="border-t border-border py-12 relative z-10">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8">
