@@ -14,6 +14,8 @@ const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Extract the defaultTab from location state
   const state = location.state as LocationState | null;
   const defaultTab = state?.defaultTab || "login";
   
@@ -35,7 +37,7 @@ const AuthPage: React.FC = () => {
     
     // Listen for authentication state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && event === 'SIGNED_IN') {
+      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
         navigate('/dashboard');
       }
     });
