@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
@@ -151,9 +152,16 @@ const SettingsPage: React.FC = () => {
   const handleLogout = async () => {
     setLoading(true);
     try {
-      await supabase.auth.signOut();
+      // Clear local storage data related to user
+      localStorage.removeItem('userPreferences');
+      
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+      
       toast.success("Logged out successfully");
-      navigate('/auth');
+      navigate('/');
     } catch (error: any) {
       toast.error(`Failed to log out: ${error.message}`);
       setLoading(false);

@@ -13,7 +13,7 @@ const CallToAction: React.FC = () => {
   };
 
   return (
-    <section className="py-24 relative z-10">
+    <section className="py-24 relative z-10" id="call-to-action">
       <div className="container mx-auto px-4">
         <motion.div 
           className="max-w-4xl mx-auto bg-gradient-to-br from-space-purple/20 to-accent/20 backdrop-blur-md border border-space-purple/20 rounded-2xl p-10 text-center"

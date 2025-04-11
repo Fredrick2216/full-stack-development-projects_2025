@@ -38,6 +38,11 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          // Clear any user data from local storage when signing out
+          localStorage.removeItem('userPreferences');
+        }
+        
         setSession(session);
         setLoading(false);
       }
