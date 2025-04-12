@@ -45,18 +45,24 @@ export const useStripeCheckout = () => {
       });
       
       if (error) {
-        throw new Error(error.message);
+        console.error("Stripe function error:", error);
+        throw new Error(error.message || "Failed to create checkout session");
       }
       
       if (data?.url) {
         // Redirect to Stripe Checkout
         window.location.href = data.url;
+      } else if (data?.message) {
+        toast.info(data.message);
+        navigate("/dashboard");
       } else {
         throw new Error("No checkout URL returned");
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
       toast.error(`Payment error: ${error.message || "Failed to process payment"}`);
+      // Fallback to free plan on error
+      navigate("/dashboard");
     } finally {
       setIsLoading(false);
     }

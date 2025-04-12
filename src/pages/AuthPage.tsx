@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import StarField from "@/components/StarField";
 import AuthForm from "@/components/AuthForm";
@@ -5,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { toast } from "sonner";
 
 interface LocationState {
   defaultTab?: "login" | "register";
@@ -36,7 +38,9 @@ const AuthPage: React.FC = () => {
     try {
       // If user just signed in and came from pricing selection with a plan, proceed to checkout
       if (redirectAfterAuth && selectedPlan) {
-        handleCheckout(selectedPlan);
+        setTimeout(() => {
+          handleCheckout(selectedPlan);
+        }, 0);
         return;
       }
       
@@ -59,6 +63,9 @@ const AuthPage: React.FC = () => {
         if (data.session) {
           handlePostAuthAction(data.session);
         }
+      } catch (error) {
+        console.error("Auth session check error:", error);
+        toast.error("Failed to check authentication status");
       } finally {
         setIsLoading(false);
       }

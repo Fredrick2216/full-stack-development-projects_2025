@@ -39,8 +39,21 @@ serve(async (req) => {
       );
     }
     
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    // Get the Stripe secret key from environment variables
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      console.error("STRIPE_SECRET_KEY is not set");
+      return new Response(
+        JSON.stringify({ error: "Stripe configuration error" }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+    
+    // Initialize Stripe with explicit API key
+    const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
     
