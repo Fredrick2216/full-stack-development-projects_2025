@@ -2,14 +2,23 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 
 const CallToAction: React.FC = () => {
   const navigate = useNavigate();
+  const { handleCheckout, isLoading } = useStripeCheckout();
 
-  const handleGetStarted = () => {
-    navigate("/auth", { state: { defaultTab: "register", forceShowForm: true } });
+  const handleGetStarted = async () => {
+    try {
+      // Direct users to the premium plan checkout
+      await handleCheckout("premium");
+    } catch (error) {
+      console.error("Error in CallToAction:", error);
+      // Fallback to auth page if there's an error
+      navigate("/auth", { state: { defaultTab: "register", forceShowForm: true } });
+    }
   };
 
   return (
@@ -35,8 +44,18 @@ const CallToAction: React.FC = () => {
               onClick={handleGetStarted}
               className="bg-space-purple hover:bg-space-purple/90 text-lg px-8 py-6 h-auto"
               size="lg"
+              disabled={isLoading}
             >
-              Start For Free <ArrowRight className="ml-2" />
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Start For Free <ArrowRight className="ml-2" />
+                </>
+              )}
             </Button>
           </motion.div>
         </motion.div>

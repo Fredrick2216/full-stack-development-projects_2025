@@ -1,25 +1,30 @@
-
 import React, { useState, useEffect } from "react";
 import StarField from "@/components/StarField";
 import AuthForm from "@/components/AuthForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 
 interface LocationState {
   defaultTab?: "login" | "register";
   forceShowForm?: boolean;
+  redirectAfterAuth?: boolean;
+  selectedPlan?: "free" | "premium" | "family";
 }
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const { handleCheckout } = useStripeCheckout();
   
-  // Extract the defaultTab and forceShowForm from location state
+  // Extract state from location
   const state = location.state as LocationState | null;
   const defaultTab = state?.defaultTab || "login";
   const forceShowForm = state?.forceShowForm || false;
+  const redirectAfterAuth = state?.redirectAfterAuth || false;
+  const selectedPlan = state?.selectedPlan;
   
   useEffect(() => {
     // Check if user is already logged in
@@ -28,7 +33,13 @@ const AuthPage: React.FC = () => {
       const { data } = await supabase.auth.getSession();
       
       if (data.session && !forceShowForm) {
-        // User is logged in and not forcing form display, redirect to dashboard
+        // If user is logged in and came from pricing selection with a plan, proceed to checkout
+        if (redirectAfterAuth && selectedPlan) {
+          handleCheckout(selectedPlan);
+          return;
+        }
+        
+        // Otherwise, redirect to dashboard
         navigate('/dashboard');
       }
       
@@ -40,6 +51,13 @@ const AuthPage: React.FC = () => {
     // Listen for authentication state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !forceShowForm) {
+        // If user just signed in and came from pricing selection with a plan, proceed to checkout
+        if (redirectAfterAuth && selectedPlan) {
+          handleCheckout(selectedPlan);
+          return;
+        }
+        
+        // Otherwise, redirect to dashboard
         navigate('/dashboard');
       }
     });
@@ -47,7 +65,7 @@ const AuthPage: React.FC = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, forceShowForm]);
+  }, [navigate, forceShowForm, redirectAfterAuth, selectedPlan, handleCheckout]);
   
   return (
     <div className="min-h-screen w-full space-bg animate-space flex items-center justify-center px-4">

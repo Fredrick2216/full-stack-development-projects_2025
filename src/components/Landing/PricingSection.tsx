@@ -2,18 +2,18 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { toast } from "sonner";
 
 const PricingSection: React.FC = () => {
   const navigate = useNavigate();
-
-  const handleGetStarted = () => {
-    navigate("/auth", { state: { defaultTab: "register" } });
-  };
+  const { handleCheckout, isLoading } = useStripeCheckout();
 
   const pricingPlans = [
     {
+      id: "free",
       name: "Free",
       price: "$0",
       description: "Perfect for individuals just getting started with budgeting",
@@ -26,6 +26,7 @@ const PricingSection: React.FC = () => {
       highlight: false
     },
     {
+      id: "premium",
       name: "Premium",
       price: "$9.99",
       period: "/month",
@@ -40,6 +41,7 @@ const PricingSection: React.FC = () => {
       highlight: true
     },
     {
+      id: "family",
       name: "Family",
       price: "$19.99",
       period: "/month",
@@ -54,6 +56,17 @@ const PricingSection: React.FC = () => {
       highlight: false
     }
   ];
+
+  const handlePlanSelection = async (planId: string) => {
+    if (isLoading) return;
+    
+    try {
+      await handleCheckout(planId as "free" | "premium" | "family");
+    } catch (error) {
+      console.error("Error selecting plan:", error);
+      toast.error("Failed to select plan. Please try again.");
+    }
+  };
 
   return (
     <section id="pricing" className="py-24 bg-gradient-to-b from-background/30 to-background relative z-10">
@@ -113,9 +126,15 @@ const PricingSection: React.FC = () => {
                         ? "bg-space-purple hover:bg-space-purple/90" 
                         : "bg-muted hover:bg-muted/90"
                     }`}
-                    onClick={handleGetStarted}
+                    onClick={() => handlePlanSelection(plan.id)}
+                    disabled={isLoading}
                   >
-                    Get Started
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : "Get Started"}
                   </Button>
                 </motion.div>
               </div>
