@@ -38,9 +38,11 @@ const AuthPage: React.FC = () => {
     try {
       // If user just signed in and came from pricing selection with a plan, proceed to checkout
       if (redirectAfterAuth && selectedPlan) {
+        // Use setTimeout to ensure it runs after the current call stack is clear
+        // This helps prevent issues with auth state not being fully updated
         setTimeout(() => {
           handleCheckout(selectedPlan);
-        }, 0);
+        }, 100);
         return;
       }
       

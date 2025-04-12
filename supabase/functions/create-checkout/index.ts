@@ -42,9 +42,9 @@ serve(async (req) => {
     // Get the Stripe secret key from environment variables
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeSecretKey) {
-      console.error("STRIPE_SECRET_KEY is not set");
+      console.error("STRIPE_SECRET_KEY is not set in edge function environment variables");
       return new Response(
-        JSON.stringify({ error: "Stripe configuration error" }),
+        JSON.stringify({ error: "Stripe configuration error - API key not set" }),
         { 
           status: 500, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
@@ -52,20 +52,31 @@ serve(async (req) => {
       );
     }
     
-    // Initialize Stripe with explicit API key
+    // Initialize Stripe with the secret key
     const stripe = new Stripe(stripeSecretKey, {
       apiVersion: "2023-10-16",
     });
     
     // Check if the user already exists as a Stripe customer
     let customerId;
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
-    } else {
-      // Create a new customer if one doesn't exist
-      const customer = await stripe.customers.create({ email: user.email });
-      customerId = customer.id;
+    try {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+      } else {
+        // Create a new customer if one doesn't exist
+        const customer = await stripe.customers.create({ email: user.email });
+        customerId = customer.id;
+      }
+    } catch (stripeError) {
+      console.error("Stripe customer error:", stripeError);
+      return new Response(
+        JSON.stringify({ error: "Failed to process Stripe customer data" }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     }
     
     // Set up the price and product data based on the selected plan
@@ -123,28 +134,39 @@ serve(async (req) => {
       );
     }
     
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: priceData,
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
-      success_url: `${req.headers.get("origin")}/dashboard?payment=success`,
-      cancel_url: `${req.headers.get("origin")}/?payment=canceled`,
-    });
-    
-    return new Response(
-      JSON.stringify({ status: "success", url: session.url }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
-    );
+    try {
+      // Create Checkout Session
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: priceData,
+            quantity: 1,
+          },
+        ],
+        mode: "subscription",
+        success_url: `${req.headers.get("origin")}/dashboard?payment=success`,
+        cancel_url: `${req.headers.get("origin")}/?payment=canceled`,
+      });
+      
+      return new Response(
+        JSON.stringify({ status: "success", url: session.url }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    } catch (stripeError) {
+      console.error("Stripe checkout error:", stripeError);
+      return new Response(
+        JSON.stringify({ status: "error", error: stripeError.message }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
   } catch (error) {
     console.error("Error in create-checkout:", error);
     return new Response(

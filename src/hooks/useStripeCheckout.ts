@@ -39,6 +39,8 @@ export const useStripeCheckout = () => {
         return;
       }
       
+      toast.info("Preparing checkout...");
+      
       // Call the create-checkout function
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: { plan },
@@ -49,6 +51,10 @@ export const useStripeCheckout = () => {
         throw new Error(error.message || "Failed to create checkout session");
       }
       
+      if (!data) {
+        throw new Error("No data returned from the checkout function");
+      }
+      
       if (data?.url) {
         // Redirect to Stripe Checkout
         window.location.href = data.url;
@@ -56,13 +62,13 @@ export const useStripeCheckout = () => {
         toast.info(data.message);
         navigate("/dashboard");
       } else {
+        console.error("Unexpected response:", data);
         throw new Error("No checkout URL returned");
       }
     } catch (error: any) {
       console.error("Checkout error:", error);
       toast.error(`Payment error: ${error.message || "Failed to process payment"}`);
-      // Fallback to free plan on error
-      navigate("/dashboard");
+      // We don't redirect to dashboard on error anymore, so the user can try again
     } finally {
       setIsLoading(false);
     }
