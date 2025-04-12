@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import StarField from "@/components/StarField";
 import BarChartComponent from "@/components/Reports/BarChartComponent";
 import CategoryDistribution from "@/components/Reports/CategoryDistribution";
 import LineChartComponent from "@/components/Reports/LineChartComponent";
+import DownloadReportButton from "@/components/Reports/DownloadReportButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight, ArrowDownRight, DollarSign, Calendar, Loader2 } from "lucide-react";
@@ -152,6 +154,7 @@ const ReportsPage: React.FC = () => {
     : { category: 'None', count: 0, total: 0 };
   
   const currentMonthName = new Date().toLocaleString('default', { month: 'long' });
+  const currentYear = new Date().getFullYear();
   const previousMonthName = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLocaleString('default', { month: 'long' });
 
   return (
@@ -161,9 +164,19 @@ const ReportsPage: React.FC = () => {
       
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-6xl mx-auto space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-            <p className="text-muted-foreground">Visualize and analyze your financial data</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+              <p className="text-muted-foreground">Visualize and analyze your financial data</p>
+            </div>
+            
+            {!loading && expenses.length > 0 && (
+              <DownloadReportButton 
+                expenses={expenses} 
+                month={currentMonthName} 
+                year={currentYear} 
+              />
+            )}
           </div>
           
           {loading ? (

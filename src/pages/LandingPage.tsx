@@ -4,7 +4,6 @@ import Header from "@/components/Landing/Header";
 import HeroSection from "@/components/Landing/HeroSection";
 import FeaturesSection from "@/components/Landing/FeaturesSection";
 import HowItWorksSection from "@/components/Landing/HowItWorksSection";
-import PricingSection from "@/components/Landing/PricingSection";
 import CallToAction from "@/components/Landing/CallToAction";
 import Footer from "@/components/Landing/Footer";
 import BackgroundEffects from "@/components/Landing/BackgroundEffects";
@@ -38,7 +37,7 @@ const LandingPage: React.FC = () => {
       <HeroSection />
       <FeaturesSection />
       <HowItWorksSection />
-      <PricingSection />
+      {/* Pricing section removed */}
       <CallToAction />
       <Footer />
     </div>
