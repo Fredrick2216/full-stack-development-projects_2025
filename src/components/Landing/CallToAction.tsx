@@ -10,10 +10,10 @@ const CallToAction: React.FC = () => {
   const navigate = useNavigate();
   const { handleCheckout, isLoading } = useStripeCheckout();
 
-  const handleGetStarted = async () => {
+  const handleGetStarted = () => {
     try {
-      // Direct users to the premium plan checkout
-      await handleCheckout("premium");
+      // Direct users to the free plan to get started
+      handleCheckout("free");
     } catch (error) {
       console.error("Error in CallToAction:", error);
       // Fallback to auth page if there's an error

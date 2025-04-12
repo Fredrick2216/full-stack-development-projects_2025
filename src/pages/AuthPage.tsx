@@ -18,6 +18,7 @@ const AuthPage: React.FC = () => {
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const { handleCheckout } = useStripeCheckout();
+  const [processingAuth, setProcessingAuth] = useState(false);
   
   // Extract state from location
   const state = location.state as LocationState | null;
@@ -26,46 +27,56 @@ const AuthPage: React.FC = () => {
   const redirectAfterAuth = state?.redirectAfterAuth || false;
   const selectedPlan = state?.selectedPlan;
   
+  // Handle post-authentication actions
+  const handlePostAuthAction = (userSession: any) => {
+    if (!userSession || processingAuth) return;
+    
+    setProcessingAuth(true);
+    
+    try {
+      // If user just signed in and came from pricing selection with a plan, proceed to checkout
+      if (redirectAfterAuth && selectedPlan) {
+        handleCheckout(selectedPlan);
+        return;
+      }
+      
+      // Otherwise, redirect to dashboard if not explicitly showing the form
+      if (!forceShowForm) {
+        navigate('/dashboard');
+      }
+    } finally {
+      setProcessingAuth(false);
+    }
+  };
+  
   useEffect(() => {
     // Check if user is already logged in
     const checkUser = async () => {
-      setIsLoading(true);
-      const { data } = await supabase.auth.getSession();
-      
-      if (data.session && !forceShowForm) {
-        // If user is logged in and came from pricing selection with a plan, proceed to checkout
-        if (redirectAfterAuth && selectedPlan) {
-          handleCheckout(selectedPlan);
-          return;
-        }
+      try {
+        setIsLoading(true);
+        const { data } = await supabase.auth.getSession();
         
-        // Otherwise, redirect to dashboard
-        navigate('/dashboard');
+        if (data.session) {
+          handlePostAuthAction(data.session);
+        }
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
     
     checkUser();
     
     // Listen for authentication state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && !forceShowForm) {
-        // If user just signed in and came from pricing selection with a plan, proceed to checkout
-        if (redirectAfterAuth && selectedPlan) {
-          handleCheckout(selectedPlan);
-          return;
-        }
-        
-        // Otherwise, redirect to dashboard
-        navigate('/dashboard');
+      if (session && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+        handlePostAuthAction(session);
       }
     });
     
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, forceShowForm, redirectAfterAuth, selectedPlan, handleCheckout]);
+  }, [navigate, forceShowForm, redirectAfterAuth, selectedPlan]);
   
   return (
     <div className="min-h-screen w-full space-bg animate-space flex items-center justify-center px-4">

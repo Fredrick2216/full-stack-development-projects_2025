@@ -11,6 +11,8 @@ export const useStripeCheckout = () => {
   const navigate = useNavigate();
 
   const handleCheckout = async (plan: PlanType) => {
+    if (isLoading) return;
+    
     setIsLoading(true);
     
     try {
