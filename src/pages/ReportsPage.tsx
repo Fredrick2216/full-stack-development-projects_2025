@@ -164,19 +164,30 @@ const ReportsPage: React.FC = () => {
       
       <div className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-6xl mx-auto space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
               <p className="text-muted-foreground">Visualize and analyze your financial data</p>
             </div>
             
-            {!loading && expenses.length > 0 && (
-              <DownloadReportButton 
-                expenses={expenses} 
-                month={currentMonthName} 
-                year={currentYear} 
-              />
-            )}
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              {!loading && expenses.length > 0 && (
+                <>
+                  <DownloadReportButton 
+                    expenses={expenses} 
+                    weeklyMode={true}
+                    variant="secondary"
+                    className="w-full sm:w-auto"
+                  />
+                  <DownloadReportButton 
+                    expenses={expenses} 
+                    month={currentMonthName} 
+                    year={currentYear}
+                    className="w-full sm:w-auto"
+                  />
+                </>
+              )}
+            </div>
           </div>
           
           {loading ? (
